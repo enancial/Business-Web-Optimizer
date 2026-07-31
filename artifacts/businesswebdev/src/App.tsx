@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Router as WouterRouter, Route, Switch } from 'wouter';
+import { Router as WouterRouter, Route, Switch, useLocation } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -12,22 +11,25 @@ import { HowTheyWorkTogether } from '@/components/HowTheyWorkTogether';
 import { HowItWorks } from '@/components/HowItWorks';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
-import { CheckoutModal } from '@/components/CheckoutModal';
 import { Success } from '@/pages/Success';
 import { Cancel } from '@/pages/Cancel';
+import { CheckoutPage } from '@/pages/CheckoutPage';
 
 const queryClient = new QueryClient();
 
-type CheckoutProduct = 'launch-package' | 'management-plan';
-
-function HomePage({ onCheckout }: { onCheckout: (product: CheckoutProduct) => void }) {
+function HomePage() {
+  const [, navigate] = useLocation();
   return (
     <div className="min-h-screen">
       <Nav />
       <Hero />
       <WhichDoINeed />
-      <LaunchPackage onCheckout={() => onCheckout('launch-package')} />
-      <ManagementPlan onCheckout={() => onCheckout('management-plan')} />
+      <LaunchPackage
+        onCheckout={() => navigate('/checkout?product=launch-package')}
+      />
+      <ManagementPlan
+        onCheckout={() => navigate('/checkout?product=management-plan')}
+      />
       <HowTheyWorkTogether />
       <HowItWorks />
       <FAQ />
@@ -37,8 +39,6 @@ function HomePage({ onCheckout }: { onCheckout: (product: CheckoutProduct) => vo
 }
 
 function App() {
-  const [checkoutProduct, setCheckoutProduct] = useState<CheckoutProduct | null>(null);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -46,19 +46,10 @@ function App() {
           <Switch>
             <Route path="/success" component={Success} />
             <Route path="/cancel" component={Cancel} />
-            <Route path="/">
-              <HomePage onCheckout={setCheckoutProduct} />
-            </Route>
+            <Route path="/checkout" component={CheckoutPage} />
+            <Route path="/" component={HomePage} />
           </Switch>
         </WouterRouter>
-
-        {checkoutProduct && (
-          <CheckoutModal
-            product={checkoutProduct}
-            onClose={() => setCheckoutProduct(null)}
-          />
-        )}
-
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

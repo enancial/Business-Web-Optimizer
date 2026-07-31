@@ -1,0 +1,96 @@
+Stripe is already implemented in this project. Do not start from scratch. Fix and reconfigure the existing Stripe integration to match the spec below.
+
+Goal: Fully embedded, on-page checkout (no popups/modals, no redirect to Stripe-hosted pages), using Replit’s managed Stripe connector.
+
+1. Stripe connection
+Use Replit’s managed Stripe connector (do not hardcode raw API keys).
+
+The app must use whatever mode the connected Stripe account is in (we will connect a live account for production).
+
+If there is any sandbox/test-only wiring, remove or disable it for production.
+
+2. Products / prices
+Do not auto-create products or prices in code for production.
+
+I will create these manually in the Stripe Dashboard:
+
+“30-Day Launch Package” – one-time $2,500
+
+“Website Management Plan” – recurring $450/month
+
+The code should:
+
+Look products/prices up by name, or
+
+Use price IDs stored in config/env (I’ll provide them when asked).
+
+Remove any logic that auto-creates these products/prices in live.
+
+3. Checkout (embedded only)
+Convert the existing checkout to use Stripe Payment Element embedded directly on-page (like a /billing page):
+
+No popups/modals.
+
+No redirect to Stripe-hosted Checkout pages.
+
+For the one-time package:
+
+Implement a Payment Intent or Checkout Session in embedded mode.
+
+For the subscription:
+
+Create an incomplete subscription server-side, return a clientSecret, and mount the Payment Element on the client.
+
+Implement or update on-site /success and /cancel pages:
+
+Show simple confirmation/cancellation messages.
+
+Do not rely on external redirects for the core payment flow.
+
+Near the payment UI, add this line (or equivalent):
+“Payments are processed securely via Stripe. This is a streamlined, self-serve checkout for founders who are ready to move quickly.”
+
+Wire the existing CTAs:
+
+“Start your 30-Day Launch Package – $2,500” → embedded one-time payment.
+
+“Start your Website Management Plan – $450/month” → embedded subscription.
+
+4. Webhooks
+Use the same pattern as Replit’s stripe-replit-sync (or equivalent) to:
+
+Handle webhook delivery.
+
+Sync Stripe data into local tables (e.g., subscriptions, customers).
+
+Webhook endpoint: /api/stripe/webhook.
+
+Webhook handler should update local subscription/payment state based on events like:
+
+checkout.session.completed
+
+customer.subscription.updated
+
+customer.subscription.deleted
+
+If there is existing webhook logic, refactor it to match this pattern instead of adding duplicate endpoints.
+
+5. Publishing / domain
+Prepare the app for publishing on a custom domain (businesswebdev.com).
+
+Ensure there is an APP_URL (or equivalent) secret so Stripe redirect URLs (success/cancel/portal) resolve correctly in production.
+
+Fix any startup/ordering issues that are currently causing deployment failures (e.g., server must listen on port 8080 before running heavy Stripe init).
+
+6. Constraints
+Do not implement any Stripe-hosted Checkout redirect flow. All payment collection must happen via embedded Payment Element on-page.
+
+Do not add new features beyond what’s needed to:
+
+Fix the existing Stripe integration.
+
+Reconfigure it to match this embedded-only spec.
+
+Make publishing succeed.
+
+If you need product/price IDs, webhook configuration details, or any Stripe Dashboard steps, ask me explicitly before proceeding.
