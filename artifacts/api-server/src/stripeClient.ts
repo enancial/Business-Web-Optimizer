@@ -15,13 +15,28 @@ interface ConnectorApiResponse {
 }
 
 /**
- * Fetches Stripe credentials from the Replit connection API.
+ * Fetches Stripe credentials.
+ *
+ * Priority order:
+ *  1. STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY env vars (live-mode override)
+ *  2. Replit connector (falls back to whatever key is stored there)
+ *
  * Not cached — tokens can rotate, so fetch fresh each time.
  */
 async function getStripeCredentials(): Promise<{
   secretKey: string;
   publishableKey: string;
 }> {
+  // 1. Prefer explicit env var overrides — used when the connector holds test keys
+  //    but the app should run in live mode.
+  if (process.env.STRIPE_SECRET_KEY) {
+    return {
+      secretKey: process.env.STRIPE_SECRET_KEY,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY ?? '',
+    };
+  }
+
+  // 2. Fall back to Replit connector
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
