@@ -1,87 +1,90 @@
 /**
- * Business Web Dev logo — inline SVG, pixel-perfect at any size.
- *
- * Rebuilt from the official brand style guide.
+ * Business Web Dev — inline SVG logo
+ * Traced from the official brand style guide (July 2026).
  *
  * Variants:
- *   'default' — full horizontal logo, dark text  (light backgrounds)
- *   'white'   — full horizontal logo, all white   (dark / colour backgrounds)
- *   'icon'    — hex mark only                     (favicons, avatars, etc.)
+ *   'default' — full horizontal logo on light background (navy + blue text)
+ *   'white'   — full horizontal logo on dark/colour background (all-white)
+ *   'icon'    — hex B mark only (favicons, PWA icons, etc.)
  */
 
 interface BrandLogoProps {
   variant?: 'default' | 'white' | 'icon';
-  /** Height in px. Width scales proportionally. */
   height?: number;
   className?: string;
 }
 
-// ── Brand tokens ────────────────────────────────────────────────────────────
-const NAVY  = '#0A1F44';   // outer hexagon fill + "BUSINESS" text
-const BLUE  = '#1A6FE8';   // inner hexagon fill + "WEB DEV" text
-const WHITE = '#FFFFFF';
+// ── Brand palette ─────────────────────────────────────────────────────────────
+const NAVY      = '#0A1C3E';   // outer hex fill; "BUSINESS" text
+const BLUE      = '#1565D6';   // accent / "WEB DEV" text
+const BLUE_MID  = '#0E4DB5';   // inner-hex gradient mid-tone
+const BLUE_DARK = '#0A3080';   // inner-hex gradient shadow (bottom-left)
+const WHITE     = '#FFFFFF';
 
-// ── Hex icon (100 × 100 viewBox) ────────────────────────────────────────────
+// ── Hex icon (100 × 100 viewBox) ─────────────────────────────────────────────
 //
-// Pointy-top hexagon (vertices at top & bottom, flat sides L/R).
-// Outer hex: radius ≈ 46; Inner hex: radius ≈ 37.
+// Pointy-top regular hexagon (vertices at top & bottom).
+// The inner fill uses a linear gradient — light upper-right → dark lower-left —
+// which recreates the depth/shadow seen in the brand reference.
 //
-// The "B" letterform is built from three pieces:
-//   1. Left vertical bar
-//   2. Upper bump — right-pointing angular arrow (pentagon)
-//   3. Lower bump — right-pointing angular arrow (pentagon), slightly taller
+// The "B" letterform is two right-pointing arrow pentagons stacked on a left bar.
 //
-function HexIcon({ white = false }: { white?: boolean }) {
-  const outerFill = white ? WHITE    : NAVY;
-  const innerFill = white ? '#B8D4FF' : BLUE;
-  const bFill     = white ? NAVY     : WHITE;
+function HexIcon({ white = false, idSuffix = '' }: { white?: boolean; idSuffix?: string }) {
+  const gradId    = `hexGrad${idSuffix}`;
+  const outerFill = white ? WHITE : NAVY;
+  const bFill     = white ? NAVY  : WHITE;
 
   return (
     <g>
-      {/* ── Outer hexagon (navy / white) ── */}
+      <defs>
+        {/* Inner-hex gradient: bright blue upper-right → dark navy lower-left */}
+        <linearGradient id={gradId} x1="85%" y1="10%" x2="15%" y2="90%">
+          <stop offset="0%"   stopColor={white ? '#D0E4FF' : '#1E82F0'} />
+          <stop offset="55%"  stopColor={white ? '#A8C8F8' : BLUE_MID}  />
+          <stop offset="100%" stopColor={white ? '#7AAAEE' : BLUE_DARK} />
+        </linearGradient>
+      </defs>
+
+      {/* Outer hexagon — dark navy border/background */}
       <polygon
-        points="50,4 90,27 90,73 50,96 10,73 10,27"
+        points="50,3 90,26 90,74 50,97 10,74 10,26"
         fill={outerFill}
       />
 
-      {/* ── Inner hexagon (blue / light-blue) ── */}
+      {/* Inner hexagon — gradient fill */}
       <polygon
-        points="50,14 82,32 82,68 50,86 18,68 18,32"
-        fill={innerFill}
+        points="50,13 82,31 82,69 50,87 18,69 18,31"
+        fill={`url(#${gradId})`}
       />
 
-      {/* ── B letterform — white ── */}
+      {/* ── White geometric B ── */}
 
-      {/* Left vertical bar — full height of both bumps */}
-      <rect x="27" y="23" width="10" height="54" fill={bFill} />
+      {/* Left vertical bar */}
+      <rect x="26" y="22" width="11" height="56" fill={bFill} />
 
-      {/* Upper bump: right-pointing arrow shape (pentagon)
-            Top-left → top-right → point → bottom-right → bottom-left */}
+      {/* Upper arrow bump (pentagon: flat left + flat top + right point + flat bottom) */}
+      {/* Spans y 22 → 49; apex at x ≈ 73 */}
       <polygon
-        points="37,23 63,23 73,36 63,49 37,49"
+        points="37,22  64,22  74,35.5  64,49  37,49"
         fill={bFill}
       />
 
-      {/* Gap between bumps: y=49–51 (2 px, matches the inner-hex shadow) */}
+      {/* Gap between bumps: y 49 → 51 (2 px) */}
 
-      {/* Lower bump: slightly taller arrow (pentagon) */}
+      {/* Lower arrow bump — slightly taller to match brand proportions */}
+      {/* Spans y 51 → 78; apex at x ≈ 76 */}
       <polygon
-        points="37,51 65,51 75,64 65,77 37,77"
+        points="37,51  65,51  76,64.5  65,78  37,78"
         fill={bFill}
       />
     </g>
   );
 }
 
-// ── Full horizontal logo ─────────────────────────────────────────────────────
-//
-// viewBox 296 × 58
-//   [0–58]    hex icon (58 × 58 square)
-//   [70–296]  wordmark + tagline
-//
+// ── Full horizontal logo (viewBox 300 × 60) ──────────────────────────────────
 export function BrandLogo({
-  variant  = 'default',
-  height   = 40,
+  variant   = 'default',
+  height    = 40,
   className = '',
 }: BrandLogoProps) {
 
@@ -94,71 +97,75 @@ export function BrandLogo({
         xmlns="http://www.w3.org/2000/svg"
         aria-label="Business Web Dev"
         className={className}
+        role="img"
       >
-        <HexIcon />
+        <HexIcon idSuffix="icon" />
       </svg>
     );
   }
 
-  const isWhite  = variant === 'white';
-  const textTop  = isWhite ? WHITE : NAVY;
-  const textBot  = isWhite ? WHITE : BLUE;
-  const tagColor = isWhite ? `${WHITE}BB` : `${NAVY}99`;
+  const isWhite   = variant === 'white';
+  const textTop   = isWhite ? WHITE : NAVY;
+  const textBot   = isWhite ? WHITE : BLUE;
+  const tagClr    = isWhite ? `${WHITE}CC` : `${NAVY}88`;
+  const ruleClr   = isWhite ? `${WHITE}AA` : BLUE;
 
+  // viewBox 300 × 60:  hex icon occupies [0-60], text occupies [70-300]
   return (
     <svg
-      viewBox="0 0 296 58"
+      viewBox="0 0 300 60"
       height={height}
-      width={Math.round((height / 58) * 296)}
+      width={Math.round((height / 60) * 300)}
       xmlns="http://www.w3.org/2000/svg"
       aria-label="Business Web Dev"
       className={className}
+      role="img"
     >
-      {/* Hex icon: 100×100 viewBox scaled to 58×58 */}
-      <g transform="scale(0.58)">
-        <HexIcon white={isWhite} />
+      {/* Hex icon — 100×100 scaled to 60×60 */}
+      <g transform="scale(0.6)">
+        <HexIcon white={isWhite} idSuffix={isWhite ? 'wh' : 'df'} />
       </g>
 
-      {/* "BUSINESS" — upper wordmark */}
+      {/* "BUSINESS" */}
       <text
-        x="68"
-        y="22"
+        x="70"
+        y="23"
         fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
         fontWeight="900"
-        fontSize="18"
-        letterSpacing="2.5"
+        fontSize="19"
+        letterSpacing="2"
         fill={textTop}
       >
         BUSINESS
       </text>
 
-      {/* "WEB DEV" — lower wordmark, bright blue */}
+      {/* "WEB DEV" */}
       <text
-        x="68"
-        y="42"
+        x="70"
+        y="43"
         fontFamily="'Arial Black','Helvetica Neue',Arial,sans-serif"
         fontWeight="900"
-        fontSize="18"
-        letterSpacing="2.5"
+        fontSize="19"
+        letterSpacing="2"
         fill={textBot}
       >
         WEB DEV
       </text>
 
-      {/* Tagline: dash – text – dash */}
-      <line x1="68" y1="50" x2="82" y2="50" stroke={tagColor} strokeWidth="1" />
+      {/* Tagline: — WE BUILD WEBSITES THAT GROW BUSINESSES — */}
+      <line x1="70" y1="51" x2="84" y2="51" stroke={ruleClr} strokeWidth="1.2" />
       <text
-        x="85"
-        y="53"
-        fontFamily="Arial,sans-serif"
+        x="87"
+        y="54.5"
+        fontFamily="Arial,Helvetica,sans-serif"
         fontWeight="400"
-        fontSize="5.5"
-        letterSpacing="1.5"
-        fill={tagColor}
+        fontSize="5.2"
+        letterSpacing="1.6"
+        fill={tagClr}
       >
         WE BUILD WEBSITES THAT GROW BUSINESSES
       </text>
-      <line x1="275" y1="50" x2="289" y2="50" stroke={tagColor} strokeWidth="1" />
+      <line x1="272" y1="51" x2="286" y2="51" stroke={ruleClr} strokeWidth="1.2" />
     </svg>
   );
 }

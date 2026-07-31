@@ -1,7 +1,14 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#0A1F44"/>
-  <polygon points="50,14 82,32 82,68 50,86 18,68 18,32" fill="#1A6FE8"/>
-  <rect x="27" y="23" width="10" height="54" fill="#FFFFFF"/>
-  <polygon points="37,23 63,23 73,36 63,49 37,49" fill="#FFFFFF"/>
-  <polygon points="37,51 65,51 75,64 65,77 37,77" fill="#FFFFFF"/>
+  <defs>
+    <linearGradient id="g" x1="85%" y1="10%" x2="15%" y2="90%">
+      <stop offset="0%"   stop-color="#1E82F0"/>
+      <stop offset="55%"  stop-color="#0E4DB5"/>
+      <stop offset="100%" stop-color="#0A3080"/>
+    </linearGradient>
+  </defs>
+  <polygon points="50,3 90,26 90,74 50,97 10,74 10,26" fill="#0A1C3E"/>
+  <polygon points="50,13 82,31 82,69 50,87 18,69 18,31" fill="url(#g)"/>
+  <rect x="26" y="22" width="11" height="56" fill="#FFFFFF"/>
+  <polygon points="37,22 64,22 74,35.5 64,49 37,49" fill="#FFFFFF"/>
+  <polygon points="37,51 65,51 76,64.5 65,78 37,78" fill="#FFFFFF"/>
 </svg>

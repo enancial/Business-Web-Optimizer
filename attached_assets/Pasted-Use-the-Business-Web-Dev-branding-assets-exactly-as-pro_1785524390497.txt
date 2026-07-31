@@ -1,0 +1,101 @@
+Use the Business Web Dev branding assets exactly as provided. Do not redesign, restyle, or “improve” the logo or icons.
+
+Source of truth
+The attached Business Web Dev branding image is the visual source of truth for:
+
+Full horizontal logo with text
+
+Icon-only logo (hexagon B mark)
+
+White logo version on dark background
+
+Blue logo version on light background
+
+Favicon / app icon styles and sizes
+
+Do not generate alternate logo artwork. Use only assets exported from this branding.
+
+Asset storage
+Store logo files in:
+/public/images/branding/
+
+Store favicon/app icon files in:
+/public/favicon/ (or the existing favicon directory for this project)
+
+Replace all placeholder logos, icons, and brand marks with Business Web Dev assets.
+
+Logo usage
+Header: use the full horizontal Business Web Dev logo on a light background.
+
+Footer: also use the full horizontal logo; choose dark or light version to match the footer background.
+
+Dark sections (hero, CTA, etc.): use the white logo version on dark backgrounds.
+
+Light sections: use the blue logo version on white or light backgrounds.
+
+Maintain consistent padding around the logo and never stretch, distort, or recolor it.
+
+Favicon and app icons
+Use the icon-only logo as the base for all favicons and app icons.
+
+Generate (or place) the following sizes, all derived from the same icon artwork:
+
+16×16
+
+32×32
+
+48×48
+
+64×64
+
+180×180 (Apple Touch Icon)
+
+192×192 (Android icon)
+
+512×512 (PWA/app icon)
+
+Update the HTML <head> and any web app manifest so that:
+
+link rel="icon" tags point to the new favicon files.
+
+Apple Touch and Android icons point to the new Business Web Dev icon.
+
+The browser tab, bookmarks, and installed PWA/app all show the new icon.
+
+Visual style
+Use the blue from the logo as the primary accent color throughout the site.
+
+Keep layouts clean with plenty of white space.
+
+Match button, link, and highlight colors to the logo palette.
+
+Use a modern SaaS/web agency aesthetic: subtle shadows, rounded corners, and clean sans-serif typography.
+
+Quality checks
+After implementation, verify:
+
+The logo appears correctly in:
+
+Header
+
+Footer
+
+Mobile navigation
+
+The favicon/app icon appears in:
+
+Browser tab
+
+Bookmarks
+
+Mobile home screen / PWA (if applicable)
+
+Social sharing (Open Graph image) uses a Business Web Dev logo or hero image, not a placeholder.
+
+The manifest (if present) references Business Web Dev icons.
+
+There are no broken image links and no old branding left anywhere.
+
+The logo artwork, proportions, and colors exactly match the provided branding.
+
+Use only the Business Web Dev assets; do not substitute or auto-generate new logos.
