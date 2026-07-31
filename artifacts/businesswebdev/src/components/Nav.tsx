@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { BrandLogo } from '@/components/BrandLogo';
 
 export function Nav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,8 +27,8 @@ export function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-        isScrolled ? 'bg-card/95 backdrop-blur-sm border-b shadow-sm' : 'bg-transparent'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-white/95 backdrop-blur-sm border-b ${
+        isScrolled ? 'shadow-sm' : 'shadow-none'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +40,12 @@ export function Nav() {
             data-testid="link-logo"
             aria-label="Business Web Dev — home"
           >
-            <BrandLogo variant="default" height={36} />
+            <img
+              src="/images/branding/logo-horizontal.png"
+              alt="Business Web Dev"
+              height={44}
+              style={{ height: 44, width: 'auto' }}
+            />
           </a>
 
           {/* Desktop Nav */}

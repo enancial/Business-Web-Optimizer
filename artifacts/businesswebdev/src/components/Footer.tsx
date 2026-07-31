@@ -1,13 +1,15 @@
-import { BrandLogo } from '@/components/BrandLogo';
-
 export function Footer() {
   return (
     <footer className="bg-[hsl(220,15%,12%)] text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Logo row */}
+        {/* Logo row — dark-background variant from brand sheet */}
         <div className="flex justify-center mb-8">
           <a href="#top" aria-label="Business Web Dev — home">
-            <BrandLogo variant="white" height={36} />
+            <img
+              src="/images/branding/logo-dark.png"
+              alt="Business Web Dev"
+              style={{ height: 72, width: 'auto' }}
+            />
           </a>
         </div>
 
