@@ -58,7 +58,9 @@ router.post('/create-checkout-session', async (req, res): Promise<void> => {
   const returnUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
 
   const session = await stripe.checkout.sessions.create({
-    ui_mode: 'embedded',
+    // 'embedded_page' is the current name for the embedded checkout UI mode
+    // (Stripe renamed it from 'embedded' in their API)
+    ui_mode: 'embedded_page' as 'embedded',
     mode,
     line_items: [{ price: priceId, quantity: 1 }],
     return_url: returnUrl,
