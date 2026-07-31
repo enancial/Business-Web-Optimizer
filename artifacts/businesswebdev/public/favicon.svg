@@ -1,10 +1,12 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <!-- Outer hexagon — dark navy -->
-  <polygon points="50,3 88,25 88,75 50,97 12,75 12,25" fill="#0D1B3E"/>
+  <!-- Outer hexagon — dark navy, pointy-top -->
+  <polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="#0A1F44"/>
   <!-- Inner hexagon — bright blue -->
-  <polygon points="50,14 79,31 79,69 50,86 21,69 21,31" fill="#1565D6"/>
-  <!-- Geometric B — white -->
-  <rect x="27" y="27" width="10" height="46" fill="#FFFFFF"/>
-  <polygon points="37,27 62,27 68,33 68,46 62,48 37,48" fill="#FFFFFF"/>
-  <polygon points="37,52 64,52 71,59 71,68 64,73 37,73" fill="#FFFFFF"/>
+  <polygon points="50,14 82,32 82,68 50,86 18,68 18,32" fill="#1A6FE8"/>
+  <!-- B — left bar -->
+  <rect x="27" y="23" width="10" height="54" fill="#FFFFFF"/>
+  <!-- B — upper arrow bump -->
+  <polygon points="37,23 63,23 73,36 63,49 37,49" fill="#FFFFFF"/>
+  <!-- B — lower arrow bump -->
+  <polygon points="37,51 65,51 75,64 65,77 37,77" fill="#FFFFFF"/>
 </svg>
