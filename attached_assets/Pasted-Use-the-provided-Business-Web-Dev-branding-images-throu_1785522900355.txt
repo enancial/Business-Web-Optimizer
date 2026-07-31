@@ -1,0 +1,56 @@
+Use the provided **Business Web Dev** branding images throughout the website to create a clean, modern, and professional appearance.
+
+### Logo Usage
+
+* Replace any placeholder logos with the new **Business Web Dev** logo.
+* Use the full horizontal logo in the website header and footer.
+* Use the white logo variation on dark backgrounds.
+* Use the standard blue logo on white or light backgrounds.
+* Maintain appropriate padding around the logo and never stretch or distort it.
+
+### Site Icon & Favicon
+
+* Use the provided site icon as the favicon and application icon.
+* Generate and reference the following favicon sizes if needed:
+
+  * 16×16
+  * 32×32
+  * 48×48
+  * 64×64
+  * 180×180 (Apple Touch Icon)
+  * 192×192 (Android)
+  * 512×512 (PWA/App Icon)
+* Update the HTML `<head>` so all favicon and app icon references point to the new assets.
+* Ensure browsers, mobile devices, bookmarks, and search results display the new icon.
+
+### Branding
+
+* Use the blue color palette from the logo as the site's primary accent color.
+* Keep backgrounds clean with plenty of white space.
+* Match buttons, links, and highlights to the logo colors for a cohesive brand identity.
+* Maintain a modern SaaS/web agency aesthetic with subtle shadows, rounded corners, and clean typography.
+
+### Asset Placement
+
+* Store the logo files in `/public/images/branding/`.
+* Store favicon and icon files in `/public/favicon/` (or the project's preferred favicon directory).
+* Replace all placeholder branding assets with the new Business Web Dev assets.
+
+### Quality Checks
+
+* Verify the logo appears correctly in:
+
+  * Header
+  * Footer
+  * Mobile navigation
+  * Browser tab
+  * Social sharing previews (Open Graph image if applicable)
+  * Web app manifest (if present)
+
+* Ensure there are no broken image links.
+
+* Confirm the favicon appears after a hard refresh.
+
+* Do not alter the logo artwork, proportions, or colors.
+
+After implementing the assets, verify that the website consistently uses the new Business Web Dev branding across all pages and devices.

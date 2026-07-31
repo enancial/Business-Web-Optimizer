@@ -1,0 +1,17 @@
+{
+  "name": "Business Web Dev",
+  "short_name": "BusinessWebDev",
+  "description": "We Build Websites That Grow Businesses",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D1B3E",
+  "theme_color": "#0D1B3E",
+  "icons": [
+    {
+      "src": "/images/branding/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

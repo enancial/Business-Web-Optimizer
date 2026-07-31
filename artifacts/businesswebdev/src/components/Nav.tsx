@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/BrandLogo';
 
 export function Nav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,10 +37,11 @@ export function Nav() {
           {/* Logo */}
           <a
             href="#top"
-            className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
+            className="flex items-center hover:opacity-90 transition-opacity"
             data-testid="link-logo"
+            aria-label="Business Web Dev — home"
           >
-            Business Web Dev
+            <BrandLogo variant="default" height={36} />
           </a>
 
           {/* Desktop Nav */}
