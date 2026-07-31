@@ -2,27 +2,34 @@ export function Footer() {
   return (
     <footer className="bg-[hsl(220,15%,12%)] text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Logo row — dark-background variant from brand sheet */}
+
+        {/* Brand mark */}
         <div className="flex justify-center mb-8">
-          <a href="#top" aria-label="Business Web Dev — home">
+          <a
+            href="#top"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            aria-label="Business Web Dev — home"
+          >
             <img
-              src="/images/branding/logo-dark.png"
-              alt="Business Web Dev"
-              style={{ height: 72, width: 'auto' }}
+              src="/images/branding/icon-dark.png"
+              alt=""
+              aria-hidden="true"
+              style={{ height: 40, width: 'auto' }}
             />
+            <span className="font-bold text-white text-lg">Business Web Dev</span>
           </a>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           {/* Copyright */}
-          <p className="text-sm text-white/70" data-testid="text-copyright">
+          <p className="text-sm text-white/60" data-testid="text-copyright">
             © 2026 Business Web Dev. All rights reserved.
           </p>
 
           {/* Email */}
           <a
             href="mailto:contact@businesswebdev.com"
-            className="text-sm text-white/90 hover:text-white transition-colors"
+            className="text-sm text-white/80 hover:text-white transition-colors"
             data-testid="link-email"
           >
             contact@businesswebdev.com
@@ -32,14 +39,14 @@ export function Footer() {
           <div className="flex gap-6">
             <a
               href="#launch-package"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="text-sm text-white/60 hover:text-white transition-colors"
               data-testid="link-footer-launch-package"
             >
               Launch Package
             </a>
             <a
               href="#management-plan"
-              className="text-sm text-white/70 hover:text-white transition-colors"
+              className="text-sm text-white/60 hover:text-white transition-colors"
               data-testid="link-footer-management-plan"
             >
               Management Plan
