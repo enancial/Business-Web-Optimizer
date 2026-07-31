@@ -98,6 +98,14 @@ export async function getStripePublishableKey(): Promise<string> {
 }
 
 /**
+ * Returns the Stripe secret key (for cases that need raw API access).
+ */
+export async function getStripeSecretKey(): Promise<string> {
+  const { secretKey } = await getStripeCredentials();
+  return secretKey;
+}
+
+/**
  * Returns a fresh StripeSync instance for webhook processing and data sync.
  * Not cached — fetches credentials on every call so rotated keys are picked up.
  */

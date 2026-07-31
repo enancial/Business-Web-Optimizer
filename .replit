@@ -22,8 +22,8 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-LAUNCH_PACKAGE_PRICE_ID = "price_1TzIMnBhANG4aD0xiw0jLZCc"
-MANAGEMENT_PLAN_PRICE_ID = "price_1TzIMoBhANG4aD0xWZZuIRLy"
+LAUNCH_PACKAGE_PRICE_ID = "price_1TzKdMJUmA42MDGciRYULgas"
+MANAGEMENT_PLAN_PRICE_ID = "price_1TzKdNJUmA42MDGcFVwM96Wi"
 
 [nix]
 channel = "stable-25_05"

@@ -122,14 +122,23 @@ async function onPaymentIntentSucceeded(
     invoice_settings: { default_payment_method: paymentMethodId },
   });
 
+  // Apply promotion code to the subscription if one was used at checkout.
+  // 'once' coupons apply to the first subscription invoice (month 2).
+  // 'forever' / 'repeating' coupons continue for subsequent months.
+  const promotionCodeId = paymentIntent.metadata?.promotion_code_id;
+
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     default_payment_method: paymentMethodId,
     // Bill immediately for the second month (first was the PaymentIntent)
     billing_cycle_anchor_config: { day_of_month: new Date().getDate() },
+    ...(promotionCodeId
+      ? { discounts: [{ promotion_code: promotionCodeId }] }
+      : {}),
     metadata: {
       source_payment_intent: paymentIntent.id,
+      ...(promotionCodeId ? { promotion_code_id: promotionCodeId } : {}),
     },
   });
 
