@@ -1,60 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Nav() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const navLinks = [
-    { label: 'Launch Package', href: '#launch-package' },
+    { label: 'Launch Package',  href: '#launch-package' },
     { label: 'Management Plan', href: '#management-plan' },
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'FAQ', href: '#faq' },
+    { label: 'How It Works',    href: '#how-it-works' },
+    { label: 'FAQ',             href: '#faq' },
   ];
 
-  const handleLinkClick = () => {
-    setIsOpen(false);
-  };
-
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-white/95 backdrop-blur-sm border-b ${
-        isScrolled ? 'shadow-sm' : 'shadow-none'
-      }`}
-    >
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+
+          {/* ── Brand mark: icon + text ── */}
           <a
             href="#top"
-            className="flex items-center hover:opacity-90 transition-opacity"
+            className="flex items-center gap-3 flex-shrink-0 hover:opacity-80 transition-opacity"
             data-testid="link-logo"
             aria-label="Business Web Dev — home"
           >
             <img
-              src="/images/branding/logo-horizontal.png"
-              alt="Business Web Dev"
-              height={44}
-              style={{ height: 44, width: 'auto' }}
+              src="/images/branding/icon.png"
+              alt=""
+              aria-hidden="true"
+              className="h-9 w-auto"
             />
+            <span className="font-bold text-[#1A3A7A] leading-tight text-base sm:text-lg">
+              Business Web Dev
+            </span>
           </a>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* ── Desktop nav links ── */}
+          <div className="hidden md:flex items-center gap-7">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-gray-600 hover:text-[#1A3A7A] transition-colors"
                 data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 {link.label}
@@ -62,45 +49,48 @@ export function Nav() {
             ))}
           </div>
 
-          {/* CTA Button Desktop */}
+          {/* ── Desktop CTA ── */}
           <div className="hidden md:block">
-            <Button asChild size="sm" data-testid="button-work-with-me-desktop">
+            <Button asChild size="sm" className="bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-desktop">
               <a href="#launch-package">Work With Me</a>
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* ── Mobile hamburger ── */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             data-testid="button-mobile-menu"
             aria-label="Toggle menu"
           >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* ── Mobile dropdown ── */}
       {isOpen && (
-        <div className="md:hidden border-t bg-card" data-testid="mobile-menu">
-          <div className="px-4 py-4 space-y-3">
+        <div
+          className="md:hidden border-t border-gray-100 bg-white shadow-lg"
+          data-testid="mobile-menu"
+        >
+          <div className="px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                onClick={handleLinkClick}
-                className="block py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setIsOpen(false)}
+                className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#1A3A7A] transition-colors"
                 data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 {link.label}
               </a>
             ))}
-            <Button asChild className="w-full" data-testid="button-work-with-me-mobile">
-              <a href="#launch-package" onClick={handleLinkClick}>
-                Work With Me
-              </a>
-            </Button>
+            <div className="pt-2">
+              <Button asChild className="w-full bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-mobile">
+                <a href="#launch-package" onClick={() => setIsOpen(false)}>Work With Me</a>
+              </Button>
+            </div>
           </div>
         </div>
       )}
