@@ -16,7 +16,11 @@ const notIncluded = [
   'Third-party costs (tools, software, paid assets)',
 ];
 
-export function ManagementPlan() {
+interface ManagementPlanProps {
+  onCheckout: () => void;
+}
+
+export function ManagementPlan({ onCheckout }: ManagementPlanProps) {
   return (
     <section id="management-plan" className="py-20 bg-background">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -77,14 +81,12 @@ export function ManagementPlan() {
           </div>
 
           <Button
-            asChild
             size="lg"
+            onClick={onCheckout}
             className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-base px-10"
             data-testid="button-start-management-plan"
           >
-            <a href="#checkout-care">
-              Start your Website Management Plan – $450/month
-            </a>
+            Start your Website Management Plan – $450/month
           </Button>
 
           <p className="text-sm text-muted-foreground mt-6 leading-relaxed">

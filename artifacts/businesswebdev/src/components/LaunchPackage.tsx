@@ -13,7 +13,11 @@ const included = [
   'Loom walkthrough + short written report',
 ];
 
-export function LaunchPackage() {
+interface LaunchPackageProps {
+  onCheckout: () => void;
+}
+
+export function LaunchPackage({ onCheckout }: LaunchPackageProps) {
   return (
     <section id="launch-package" className="py-20 bg-muted/30">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -68,14 +72,12 @@ export function LaunchPackage() {
           </p>
 
           <Button
-            asChild
             size="lg"
+            onClick={onCheckout}
             className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-base px-10"
             data-testid="button-start-launch-package"
           >
-            <a href="#checkout-launch">
-              Start your 30-Day Launch Package – $2,500
-            </a>
+            Start your 30-Day Launch Package – $2,500
           </Button>
 
           <p className="text-sm text-muted-foreground mt-6 leading-relaxed">

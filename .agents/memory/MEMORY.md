@@ -1,0 +1,2 @@
+- [Stripe connector field names](stripe-connector-fields.md) — connector uses `settings.secret` and `settings.publishable`, NOT `secret_key`/`publishable_key`
+- [stripe-replit-sync setup](stripe-replit-sync-setup.md) — runMigrations takes no `schema` param; tables don't exist until first successful run
