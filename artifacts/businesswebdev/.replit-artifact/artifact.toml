@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Business Web Dev"
+version = "1.0.0"
+id = "artifacts/businesswebdev"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21980
+
+[services.development]
+run = "pnpm --filter @workspace/businesswebdev run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/businesswebdev", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/businesswebdev/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21980"
+BASE_PATH = "/"
