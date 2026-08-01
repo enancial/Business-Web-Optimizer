@@ -41,7 +41,7 @@ export function HowItWorks() {
           </h2>
 
           <p className="text-lg text-muted-foreground mb-12 text-center max-w-3xl mx-auto leading-relaxed">
-            Designed to be fast, focused, and almost entirely contactless. Whether you're starting with the 30-Day Launch Package or jumping straight into the Website Management Plan, the process is the same: choose your plan, pay online, fill out a short form, and I handle the rest.
+            Designed to be fast, focused, and almost entirely contactless — whether you're a founder in Raleigh and the Triangle area or working with me fully remote from anywhere in the U.S. Whether you're starting with the 30-Day Launch Package or jumping straight into the Website Management Plan, the process is the same: choose your plan, pay online, fill out a short form, and I handle the rest.
           </p>
 
           <div className="grid md:grid-cols-2 gap-8 lg:gap-10">

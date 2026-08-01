@@ -4,7 +4,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Brand mark */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-3">
           <a
             href="#top"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -20,10 +20,15 @@ export function Footer() {
           </a>
         </div>
 
+        {/* Legal name + location */}
+        <p className="text-center text-xs text-white/40 mb-8">
+          Business Web Development &amp; Consulting · Part of Business Web Group · Raleigh, NC
+        </p>
+
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           {/* Copyright */}
           <p className="text-sm text-white/60" data-testid="text-copyright">
-            © 2026 Business Web Dev. All rights reserved.
+            © 2026 Business Web Development &amp; Consulting. All rights reserved.
           </p>
 
           {/* Contact */}
@@ -43,6 +48,8 @@ export function Footer() {
             >
               (984) 400‑7773
             </a>
+            <span className="hidden sm:block text-white/30">·</span>
+            <span className="text-sm text-white/50">Raleigh, NC</span>
           </div>
 
           {/* Links */}

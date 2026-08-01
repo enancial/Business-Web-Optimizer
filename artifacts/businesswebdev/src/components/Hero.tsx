@@ -65,7 +65,7 @@ export function Hero() {
           className="text-lg sm:text-xl text-white/75 max-w-2xl mx-auto mb-8"
           data-testid="text-hero-subhead"
         >
-          Web design and ongoing management for founders who need results, not excuses. One flat price. No agencies. No mystery.
+          Web design and ongoing management for founders who need results, not excuses. Based in Raleigh, NC — working with clients across the Triangle and remote founders nationwide. One flat price. No agencies. No mystery.
         </motion.p>
 
         {/* Bullet trust signals */}

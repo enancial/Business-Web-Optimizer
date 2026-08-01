@@ -1,0 +1,63 @@
+This project is the Business Web Dev website. I want it to rank on the first page of Google for both local Raleigh, NC searches and nationwide searches related to website development and productized services for founders.
+
+Please:
+
+Set or update the HTML <title> and meta description for the main pages:
+
+Home:
+
+Title: Business Web Dev – 30‑Day Website Launch & Management for Founders | Raleigh, NC & Remote
+
+Description: Launch a professional, conversion‑ready website in 30 days and keep it sharp with ongoing management. Business Web Dev serves founders in Raleigh, NC and remote clients across the U.S.
+
+Launch Package section/page:
+
+Title: 30‑Day Website Launch Package for Founders | Business Web Dev
+
+Description: A fixed‑scope, 30‑day project to launch or overhaul your business website with clear messaging, clean UX, and basic SEO. Available to founders in Raleigh and nationwide.
+
+Website Management Plan section/page:
+
+Title: Website Management Plan – Ongoing Improvements & SEO | Business Web Dev
+
+Description: Get ongoing content updates, UX tweaks, and basic SEO from a senior partner who manages your site every month. Ideal for live sites that need continuous improvement, in Raleigh or remote.
+
+How It Works:
+
+Title: How Business Web Dev Works – Async Website Projects in 30 Days
+
+Description: See how our async, low‑meeting process takes you from choosing a package to a launch‑ready site or ongoing management, whether you’re in Raleigh, NC or working fully remote.
+
+FAQ:
+
+Title: Website Launch & Management FAQ | Business Web Dev
+
+Description: Answers to common questions about our 30‑Day Launch Package and Website Management Plan, pricing, timelines, calls, and how we work with founders in different locations.
+
+Footer and contact sections
+
+Make sure the footer and any contact / Work With Me sections clearly show:
+
+Business name: Business Web Development & Consulting (part of Business Web Group).
+
+Location: Raleigh, NC.
+
+Phone: (984) 400‑7773.
+
+Local + national copy
+
+Add “Raleigh, NC”, “Triangle area”, and “remote clients across the U.S.” naturally into the homepage and About/Contact copy, without over‑stuffing keywords.
+
+Guardrails
+
+Do not create new pages or routes.
+
+Do not change any layout, components, colors, or page structure.
+
+Only update:
+
+<title> and meta description tags.
+
+Text content inside existing headings and paragraphs where needed to add the Raleigh/national language.
+
+Apply all changes only within this project.
