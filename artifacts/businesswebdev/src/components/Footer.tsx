@@ -26,14 +26,24 @@ export function Footer() {
             © 2026 Business Web Dev. All rights reserved.
           </p>
 
-          {/* Email */}
-          <a
-            href="mailto:contact@businesswebdev.com"
-            className="text-sm text-white/80 hover:text-white transition-colors"
-            data-testid="link-email"
-          >
-            contact@businesswebdev.com
-          </a>
+          {/* Contact */}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <a
+              href="mailto:contact@businesswebdev.com"
+              className="text-sm text-white/80 hover:text-white transition-colors"
+              data-testid="link-email"
+            >
+              contact@businesswebdev.com
+            </a>
+            <span className="hidden sm:block text-white/30">·</span>
+            <a
+              href="tel:+19844007773"
+              className="text-sm text-white/80 hover:text-white transition-colors whitespace-nowrap"
+              data-testid="link-phone-footer"
+            >
+              (984) 400‑7773
+            </a>
+          </div>
 
           {/* Links */}
           <div className="flex gap-6">

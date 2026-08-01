@@ -49,8 +49,15 @@ export function Nav() {
             ))}
           </div>
 
-          {/* ── Desktop CTA ── */}
-          <div className="hidden md:block">
+          {/* ── Desktop phone + CTA ── */}
+          <div className="hidden md:flex items-center gap-4">
+            <a
+              href="tel:+19844007773"
+              className="text-sm text-gray-500 hover:text-[#1A3A7A] transition-colors whitespace-nowrap"
+              data-testid="link-phone-header"
+            >
+              Call: (984) 400‑7773
+            </a>
             <Button asChild size="sm" className="bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-desktop">
               <a href="#launch-package">Work With Me</a>
             </Button>
@@ -86,10 +93,17 @@ export function Nav() {
                 {link.label}
               </a>
             ))}
-            <div className="pt-2">
+            <div className="pt-2 space-y-2">
               <Button asChild className="w-full bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-mobile">
                 <a href="#launch-package" onClick={() => setIsOpen(false)}>Work With Me</a>
               </Button>
+              <a
+                href="tel:+19844007773"
+                className="flex justify-center text-sm text-gray-500 hover:text-[#1A3A7A] transition-colors py-1"
+                data-testid="link-phone-mobile"
+              >
+                Call: (984) 400‑7773
+              </a>
             </div>
           </div>
         </div>

@@ -80,6 +80,18 @@ export function FAQ() {
               </AccordionItem>
             ))}
           </Accordion>
+
+          {/* Contact line */}
+          <p className="mt-10 text-center text-sm text-muted-foreground" data-testid="text-faq-contact">
+            Still have questions?{' '}
+            <a href="mailto:contact@businesswebdev.com" className="text-[#1A3A7A] hover:underline font-medium">
+              contact@businesswebdev.com
+            </a>
+            {' '}or call{' '}
+            <a href="tel:+19844007773" className="text-[#1A3A7A] hover:underline font-medium whitespace-nowrap" data-testid="link-phone-faq">
+              (984) 400‑7773
+            </a>
+          </p>
         </motion.div>
       </div>
     </section>
