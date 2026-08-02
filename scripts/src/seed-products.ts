@@ -1,20 +1,18 @@
 /**
- * Seed Stripe products and prices for businesswebdev.com.
+ * Seed Stripe products and prices for businessweboptimizer.com.
  *
  * Run once:
  *   pnpm --filter @workspace/scripts exec tsx src/seed-products.ts
  *
  * Idempotent: skips creation if products with matching metadata already exist.
  * Outputs price IDs at the end — copy them into your env vars:
- *   LAUNCH_PACKAGE_PRICE_ID
- *   MANAGEMENT_PLAN_PRICE_ID
+ *   OPTIMIZER_PRICE_ID
+ *   OPTIMIZER_PRO_PRICE_ID
  */
 
 import { getUncachableStripeClient } from "./stripeClient.js";
 
-const LAUNCH_PACKAGE_METADATA_KEY = "businesswebdev_product_id";
-const LAUNCH_PACKAGE_METADATA_VALUE = "launch-package";
-const MANAGEMENT_PLAN_METADATA_VALUE = "management-plan";
+const METADATA_KEY = "businessweboptimizer_product_id";
 
 async function findOrCreateProduct(
   stripe: Awaited<ReturnType<typeof getUncachableStripeClient>>,
@@ -24,9 +22,8 @@ async function findOrCreateProduct(
     metadataValue,
   }: { name: string; description: string; metadataValue: string },
 ) {
-  // Check if product already exists (by metadata)
   const existing = await stripe.products.search({
-    query: `metadata['${LAUNCH_PACKAGE_METADATA_KEY}']:'${metadataValue}'`,
+    query: `metadata['${METADATA_KEY}']:'${metadataValue}'`,
   });
 
   if (existing.data.length > 0) {
@@ -38,7 +35,7 @@ async function findOrCreateProduct(
   const product = await stripe.products.create({
     name,
     description,
-    metadata: { [LAUNCH_PACKAGE_METADATA_KEY]: metadataValue },
+    metadata: { [METADATA_KEY]: metadataValue },
   });
 
   console.log(`✓ Created product "${name}": ${product.id}`);
@@ -51,17 +48,14 @@ async function findOrCreatePrice(
     productId,
     unitAmount,
     currency,
-    recurring,
     metadataValue,
   }: {
     productId: string;
     unitAmount: number;
     currency: string;
-    recurring?: { interval: "month" | "year" | "week" | "day" };
     metadataValue: string;
   },
 ) {
-  // Check if active price already exists for this product
   const existing = await stripe.prices.list({
     product: productId,
     active: true,
@@ -74,58 +68,53 @@ async function findOrCreatePrice(
     return price;
   }
 
-  const priceData: Parameters<typeof stripe.prices.create>[0] = {
+  const price = await stripe.prices.create({
     product: productId,
     unit_amount: unitAmount,
     currency,
-    metadata: { [LAUNCH_PACKAGE_METADATA_KEY]: metadataValue },
-  };
+    recurring: { interval: "month" },
+    metadata: { [METADATA_KEY]: metadataValue },
+  });
 
-  if (recurring) {
-    priceData.recurring = recurring;
-  }
-
-  const price = await stripe.prices.create(priceData);
   console.log(`✓ Created price for "${metadataValue}": ${price.id}`);
   return price;
 }
 
 const stripe = await getUncachableStripeClient();
 
-console.log("Seeding Stripe products for businesswebdev.com…\n");
+console.log("Seeding Stripe products for businessweboptimizer.com…\n");
 
-// 1. 30-Day Launch Package — one-time $2,500
-const launchProduct = await findOrCreateProduct(stripe, {
-  name: "30-Day Launch Package",
+// 1. Optimizer — $29/month recurring
+const optimizerProduct = await findOrCreateProduct(stripe, {
+  name: "Optimizer",
   description:
-    "Fixed-scope, 30-day project to build or overhaul a business website.",
-  metadataValue: LAUNCH_PACKAGE_METADATA_VALUE,
+    "Full site scan, deeper checks, exportable PDF report, monthly re-scan.",
+  metadataValue: "optimizer",
 });
 
-const launchPrice = await findOrCreatePrice(stripe, {
-  productId: launchProduct.id,
-  unitAmount: 250000, // $2,500 in cents
+const optimizerPrice = await findOrCreatePrice(stripe, {
+  productId: optimizerProduct.id,
+  unitAmount: 2900, // $29 in cents
   currency: "usd",
-  metadataValue: LAUNCH_PACKAGE_METADATA_VALUE,
+  metadataValue: "optimizer",
 });
 
-// 2. Website Management Plan — $450/month recurring
-const managementProduct = await findOrCreateProduct(stripe, {
-  name: "Website Management Plan",
+// 2. Optimizer Pro — $79/month recurring
+const optimizerProProduct = await findOrCreateProduct(stripe, {
+  name: "Optimizer Pro",
   description:
-    "Ongoing website management, improvements, and SEO — $450/month.",
-  metadataValue: MANAGEMENT_PLAN_METADATA_VALUE,
+    "Everything in Optimizer, plus scheduled scans, competitor comparison, white-label reports, and API access.",
+  metadataValue: "optimizer-pro",
 });
 
-const managementPrice = await findOrCreatePrice(stripe, {
-  productId: managementProduct.id,
-  unitAmount: 45000, // $450 in cents
+const optimizerProPrice = await findOrCreatePrice(stripe, {
+  productId: optimizerProProduct.id,
+  unitAmount: 7900, // $79 in cents
   currency: "usd",
-  recurring: { interval: "month" },
-  metadataValue: MANAGEMENT_PLAN_METADATA_VALUE,
+  metadataValue: "optimizer-pro",
 });
 
 console.log("\n✅ Seeding complete!\n");
 console.log("Set these environment variables in your Replit project:");
-console.log(`  LAUNCH_PACKAGE_PRICE_ID=${launchPrice.id}`);
-console.log(`  MANAGEMENT_PLAN_PRICE_ID=${managementPrice.id}`);
+console.log(`  OPTIMIZER_PRICE_ID=${optimizerPrice.id}`);
+console.log(`  OPTIMIZER_PRO_PRICE_ID=${optimizerProPrice.id}`);

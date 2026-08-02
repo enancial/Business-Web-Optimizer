@@ -1,0 +1,30 @@
+In this Business Web Optimizer project ( businessweboptimizer.com ), I’m getting this error when I click either:
+•	“Continue — $29/mo” for the Optimizer plan, or
+•	“Continue — $79/mo” for the Optimizer Pro plan:
+“Checkout is not configured. Price ID missing”
+This project is a clone of Business Web Dev, which already has Stripe checkout working for its own products ( launch-package ,  management-plan , etc.), including success ( /success ) and cancel ( /cancel ) pages. Replit has full access to my Stripe account and can create and manage products/prices.
+Please:
+1.	Find the existing product → Stripe Price ID mapping used by the checkout flow (e.g. an object or config that maps product keys like  launch-package ,  management-plan  to  price_...  IDs).
+2.	Create two new products and prices in my Stripe Dashboard for this Optimizer app:
+•	Product: Optimizer
+•	Price: $29/month (recurring).
+•	Note the created Price ID (e.g.  price_... ).
+•	Product: Optimizer Pro
+•	Price: $79/month (recurring).
+•	Note the created Price ID.
+1.	Add two new product keys to the existing mapping in the code:
+•	 optimizer  → the Price ID for the Optimizer plan you just created.
+•	 optimizer-pro  → the Price ID for the Optimizer Pro plan you just created.
+1.	Do not change the rest of the checkout logic (Payment Element, routes, success/cancel pages). Just extend the existing mapping so:
+•	 /checkout?product=optimizer  works for the $29/mo plan.
+•	 /checkout?product=optimizer-pro  works for the $79/mo plan.
+1.	Confirm that:
+•	The success and cancel URLs remain the same relative paths (e.g.  /success ,  /cancel ) and therefore will be:
+•	 https://businessweboptimizer.com/success 
+•	 https://businessweboptimizer.com/cancel 
+•	The new Stripe products are named Optimizer and Optimizer Pro and are visible in my Stripe Dashboard.
+1.	After updating everything, confirm:
+•	Which file you changed for the product → Price ID mapping.
+•	The exact lines where  optimizer  and  optimizer-pro  were added.
+•	The actual Price IDs that were created in Stripe for each plan.
+The goal: both Optimizer and Optimizer Pro checkouts should work exactly like the existing Business Web Dev products, fully wired to real Stripe prices, with all success/cancel flows staying on  businessweboptimizer.com .

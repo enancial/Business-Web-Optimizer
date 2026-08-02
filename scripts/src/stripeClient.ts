@@ -17,6 +17,11 @@ interface ConnectorApiResponse {
  * Not cached — tokens can rotate, so fetch fresh each time.
  */
 async function getStripeCredentials(): Promise<{ secretKey: string }> {
+  // Prefer explicit env var override (used when connector holds test keys)
+  if (process.env.STRIPE_SECRET_KEY) {
+    return { secretKey: process.env.STRIPE_SECRET_KEY };
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
