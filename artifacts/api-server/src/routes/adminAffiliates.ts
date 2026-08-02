@@ -151,36 +151,65 @@ router.get(
 
 // ---------------------------------------------------------------------------
 // POST /api/admin/affiliate-mark-paid  → mark earnings as paid
+//
+// Body: { affiliateIds: number[], month: string }  (month = "YYYY-MM")
+// Marks all unpaid earnings for those affiliates in that month as paid.
 // ---------------------------------------------------------------------------
 
 router.post(
   '/admin/affiliate-mark-paid',
   requireAdmin,
   async (req, res): Promise<void> => {
-    const { ids } = req.body as { ids?: unknown };
+    const { affiliateIds, month } = req.body as {
+      affiliateIds?: unknown;
+      month?: unknown;
+    };
 
-    if (!Array.isArray(ids) || ids.length === 0) {
-      res
-        .status(400)
-        .json({ error: 'ids must be a non-empty array of earning IDs.' });
+    if (!Array.isArray(affiliateIds) || affiliateIds.length === 0) {
+      res.status(400).json({ error: 'affiliateIds must be a non-empty array.' });
       return;
     }
 
-    const earningIds = ids.filter(
-      (id): id is number =>
-        typeof id === 'number' && Number.isInteger(id) && id > 0,
+    const validAffiliateIds = affiliateIds.filter(
+      (id): id is number => typeof id === 'number' && Number.isInteger(id) && id > 0,
     );
-    if (earningIds.length === 0) {
-      res.status(400).json({ error: 'No valid earning IDs provided.' });
+    if (validAffiliateIds.length === 0) {
+      res.status(400).json({ error: 'No valid affiliate IDs provided.' });
       return;
     }
 
+    const { year, month: monthNum } = parseMonth(
+      typeof month === 'string' ? month : undefined,
+    );
+
+    // Find all unpaid earning rows for these affiliates in this month
+    const earningRows = await db
+      .select({ id: affiliateEarnings.id })
+      .from(affiliateEarnings)
+      .where(
+        and(
+          inArray(affiliateEarnings.affiliateId, validAffiliateIds),
+          eq(affiliateEarnings.periodMonth, monthNum),
+          eq(affiliateEarnings.periodYear, year),
+          eq(affiliateEarnings.paid, false),
+        ),
+      );
+
+    if (earningRows.length === 0) {
+      res.json({ success: true, updated: 0 });
+      return;
+    }
+
+    const earningIds = earningRows.map((r) => r.id);
     await db
       .update(affiliateEarnings)
       .set({ paid: true })
       .where(inArray(affiliateEarnings.id, earningIds));
 
-    req.log.info({ ids: earningIds }, 'Affiliate earnings marked as paid');
+    req.log.info(
+      { affiliateIds: validAffiliateIds, month: `${year}-${monthNum}`, rowsUpdated: earningIds.length },
+      'Affiliate earnings marked as paid',
+    );
     res.json({ success: true, updated: earningIds.length });
   },
 );

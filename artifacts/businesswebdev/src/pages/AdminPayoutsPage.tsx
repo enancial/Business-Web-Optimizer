@@ -93,11 +93,11 @@ export function AdminPayoutsPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${adminSecret}`,
         },
-        body: JSON.stringify({ ids: [...selectedIds] }),
+        body: JSON.stringify({ affiliateIds: [...selectedIds], month }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `Error ${res.status}`);
-      setMarkSuccess(`Marked ${data.updated} earning row(s) as paid.`);
+      setMarkSuccess(`Marked ${data.updated} earning row(s) as paid for ${month}.`);
       setSelectedIds(new Set());
       // Refresh preview
       await handlePreview();
