@@ -36,6 +36,9 @@ interface ScanResult {
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
+/** localStorage key where the signed scan token is stored (set by Success page). */
+const SCAN_TOKEN_KEY = 'bwo_scan_token';
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -130,9 +133,17 @@ export function OptimizerTool() {
     void runProgressBar(abort.signal);
 
     try {
+      // Read the signed scan token issued at checkout (if any) and pass it so
+      // the server can verify paid-tier status without trusting the request body.
+      const scanToken = localStorage.getItem(SCAN_TOKEN_KEY);
+      const scanHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (scanToken) {
+        scanHeaders['Authorization'] = `Bearer ${scanToken}`;
+      }
+
       const res = await fetch(`${BASE}/api/scan`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: scanHeaders,
         body: JSON.stringify({ url: url.trim() }),
       });
 

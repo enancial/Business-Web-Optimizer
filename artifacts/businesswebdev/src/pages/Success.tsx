@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+/** localStorage key where the signed scan token is stored. */
+export const SCAN_TOKEN_KEY = 'bwo_scan_token';
 
 export function Success() {
   const [, navigate] = useLocation();
@@ -13,6 +16,29 @@ export function Success() {
 
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
+
+  // On mount, exchange the PaymentIntent ID for a signed scan token and persist it.
+  // This runs once — failures are silent (user still lands on the success page).
+  useEffect(() => {
+    if (!paymentIntentId) return;
+    void (async () => {
+      try {
+        const res = await fetch(`${BASE}/api/issue-scan-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentIntentId }),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { token?: string };
+        if (data.token) {
+          localStorage.setItem(SCAN_TOKEN_KEY, data.token);
+        }
+      } catch {
+        // Non-fatal — the user is still subscribed; they just won't get instant paid scans
+        // until the token is issued on a future visit.
+      }
+    })();
+  }, [paymentIntentId]);
 
   async function openBillingPortal() {
     if (!paymentIntentId) return;

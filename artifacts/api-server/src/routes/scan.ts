@@ -1,5 +1,6 @@
 import { Router, type IRouter } from 'express';
 import * as cheerio from 'cheerio';
+import jwt from 'jsonwebtoken';
 
 const router: IRouter = Router();
 
@@ -275,13 +276,34 @@ const SEVERITY_ORDER: Record<ScanIssue['severity'], number> = {
 /**
  * Fetches the given URL and runs a set of on-page optimisation checks.
  *
- * Body:  { url: string, tier?: 'free' | 'paid' }
- *   tier defaults to 'free'; paid returns the full issue list
+ * Body:   { url: string }
+ * Header: Authorization: Bearer <scan-token>   (issued by POST /api/issue-scan-token)
+ *
+ * The client-supplied `tier` field is intentionally ignored — tier is derived
+ * solely from the signed JWT in the Authorization header so it cannot be
+ * spoofed by manipulating the request body.
+ *
  * Returns: ScanResult
  */
 router.post('/scan', async (req, res): Promise<void> => {
-  const { url, tier } = req.body as { url?: unknown; tier?: unknown };
-  const isPaid = tier === 'paid';
+  const { url } = req.body as { url?: unknown };
+
+  // Determine tier from verified JWT — never trust the request body.
+  let isPaid = false;
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const secret = process.env.SESSION_SECRET;
+    if (secret) {
+      try {
+        const payload = jwt.verify(token, secret) as { tier?: string };
+        isPaid = payload.tier === 'paid';
+      } catch {
+        // Expired or tampered token — treat as free
+        isPaid = false;
+      }
+    }
+  }
 
   if (typeof url !== 'string' || !url.trim()) {
     res.status(400).json({ error: 'url is required.' });
