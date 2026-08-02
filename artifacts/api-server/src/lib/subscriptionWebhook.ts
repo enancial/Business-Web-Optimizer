@@ -40,17 +40,6 @@ async function onPaymentIntentSucceeded(
   paymentIntent: Stripe.PaymentIntent,
   log: Logger,
 ): Promise<void> {
-  // Only act on live-mode events — skip test/sandbox payment intents
-  if (!paymentIntent.livemode) {
-    if (paymentIntent.metadata?.action === 'create_subscription') {
-      log.info(
-        { id: paymentIntent.id },
-        'create_subscription action skipped (test mode)',
-      );
-    }
-    return;
-  }
-
   // Only handle payment intents that were tagged for subscription creation
   if (paymentIntent.metadata?.action !== 'create_subscription') return;
 

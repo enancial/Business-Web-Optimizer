@@ -18,6 +18,9 @@ export interface ScanResult {
   score: number;
   issues: ScanIssue[];
   fetchTimeMs: number;
+  /** Present when the response is gated — total issues found before slicing */
+  totalIssues?: number;
+  gated?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -262,14 +265,23 @@ function analyseHtml(html: string, url: string, fetchTimeMs: number): ScanResult
 // POST /api/scan
 // ---------------------------------------------------------------------------
 
+// Severity sort order — high issues bubble to the top
+const SEVERITY_ORDER: Record<ScanIssue['severity'], number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+};
+
 /**
  * Fetches the given URL and runs a set of on-page optimisation checks.
  *
- * Body:  { url: string }
+ * Body:  { url: string, tier?: 'free' | 'paid' }
+ *   tier defaults to 'free'; paid returns the full issue list
  * Returns: ScanResult
  */
 router.post('/scan', async (req, res): Promise<void> => {
-  const { url } = req.body as { url?: unknown };
+  const { url, tier } = req.body as { url?: unknown; tier?: unknown };
+  const isPaid = tier === 'paid';
 
   if (typeof url !== 'string' || !url.trim()) {
     res.status(400).json({ error: 'url is required.' });
@@ -327,7 +339,24 @@ router.post('/scan', async (req, res): Promise<void> => {
     clearTimeout(timeout);
 
     const result = analyseHtml(html, targetUrl, fetchTimeMs);
-    req.log.info({ url: targetUrl, score: result.score, issues: result.issues.length }, 'Scan complete');
+
+    // Sort issues by severity before any gating
+    result.issues.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+
+    const totalIssues = result.issues.length;
+
+    // Free tier: return only the top 3 issues
+    const FREE_LIMIT = 3;
+    if (!isPaid && totalIssues > FREE_LIMIT) {
+      result.issues = result.issues.slice(0, FREE_LIMIT);
+      result.gated = true;
+      result.totalIssues = totalIssues;
+    }
+
+    req.log.info(
+      { url: targetUrl, score: result.score, total: totalIssues, returned: result.issues.length, tier: isPaid ? 'paid' : 'free' },
+      'Scan complete',
+    );
     res.json(result);
   } catch (err: unknown) {
     clearTimeout(timeout);

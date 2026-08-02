@@ -26,6 +26,8 @@ interface ScanResult {
   score: number;
   issues: Issue[];
   fetchTimeMs: number;
+  gated?: boolean;
+  totalIssues?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -428,7 +430,7 @@ export function OptimizerTool() {
 
               {/* Issues list */}
               {result.issues.length > 0 && (
-                <div className="space-y-3 mb-8">
+                <div className="space-y-3 mb-4">
                   {result.issues.map((issue, i) => (
                     <motion.div
                       key={i}
@@ -446,6 +448,25 @@ export function OptimizerTool() {
                     </motion.div>
                   ))}
                 </div>
+              )}
+
+              {/* Gated issues teaser */}
+              {result.gated && result.totalIssues != null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.15 }}
+                  className="mb-8 rounded-xl border border-dashed border-[#1565D6]/40 bg-[#1565D6]/5 px-6 py-5 text-center"
+                  data-testid="gated-teaser"
+                >
+                  <p className="text-sm font-semibold text-[#1565D6] mb-1">
+                    +{result.totalIssues - result.issues.length} more issues found
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Upgrade to Optimizer to unlock the full report — including all{' '}
+                    {result.totalIssues} issues, severity rankings, and fix guidance.
+                  </p>
+                </motion.div>
               )}
 
               {/* Upgrade CTA */}
