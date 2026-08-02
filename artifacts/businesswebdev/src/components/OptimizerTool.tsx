@@ -91,7 +91,7 @@ function ScoreRing({ score }: { score: number }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-type ScanState = 'idle' | 'scanning' | 'results' | 'error';
+type ScanState = 'idle' | 'scanning' | 'results' | 'error' | 'token-expired';
 type EmailState = 'idle' | 'sending' | 'sent' | 'error';
 
 export function OptimizerTool() {
@@ -148,11 +148,15 @@ export function OptimizerTool() {
       });
 
       abort.abort(); // stop the fake progress bar
-      const data = (await res.json()) as ScanResult & { error?: string };
+      const data = (await res.json()) as ScanResult & { error?: string; tokenExpired?: boolean };
 
       if (!res.ok) {
-        setScanError(data.error ?? 'Scan failed. Please try again.');
-        setState('error');
+        if (res.status === 401 && data.tokenExpired) {
+          setState('token-expired');
+        } else {
+          setScanError(data.error ?? 'Scan failed. Please try again.');
+          setState('error');
+        }
         return;
       }
 
@@ -350,6 +354,42 @@ export function OptimizerTool() {
               >
                 Try again
               </Button>
+            </motion.div>
+          )}
+
+          {/* ── Token expired ── */}
+          {state === 'token-expired' && (
+            <motion.div
+              key="token-expired"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-card border border-amber-200 rounded-2xl p-8 shadow-sm text-center"
+              data-testid="scan-token-expired"
+            >
+              <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-amber-800">
+                Your paid scan access has expired
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+                Paid scan tokens last 30 days. Re-authenticate from your account page to continue
+                getting full reports.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  asChild
+                  className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white gap-2"
+                >
+                  <a href="/account">Go to My Account</a>
+                </Button>
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                >
+                  Run free scan instead
+                </Button>
+              </div>
             </motion.div>
           )}
 

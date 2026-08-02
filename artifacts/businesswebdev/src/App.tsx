@@ -13,6 +13,7 @@ import { Footer } from '@/components/Footer';
 import { Success } from '@/pages/Success';
 import { Cancel } from '@/pages/Cancel';
 import { CheckoutPage } from '@/pages/CheckoutPage';
+import { AccountPage } from '@/pages/AccountPage';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Switch>
+            <Route path="/account" component={AccountPage} />
             <Route path="/success" component={Success} />
             <Route path="/cancel" component={Cancel} />
             <Route path="/checkout" component={CheckoutPage} />

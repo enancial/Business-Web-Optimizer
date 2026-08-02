@@ -298,8 +298,16 @@ router.post('/scan', async (req, res): Promise<void> => {
       try {
         const payload = jwt.verify(token, secret) as { tier?: string };
         isPaid = payload.tier === 'paid';
-      } catch {
-        // Expired or tampered token — treat as free
+      } catch (err) {
+        // Token provided but expired — tell the client explicitly so they can re-auth
+        if (err instanceof Error && err.name === 'TokenExpiredError') {
+          res.status(401).json({
+            error: 'Your paid scan access has expired. Visit your account page to re-authenticate.',
+            tokenExpired: true,
+          });
+          return;
+        }
+        // Malformed or tampered token — treat as free tier
         isPaid = false;
       }
     }

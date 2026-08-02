@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
-import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { CheckCircle2, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SCAN_TOKEN_KEY } from '@/hooks/useAccountToken';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-/** localStorage key where the signed scan token is stored. */
-export const SCAN_TOKEN_KEY = 'bwo_scan_token';
 
 export function Success() {
   const [, navigate] = useLocation();
@@ -14,11 +12,7 @@ export function Success() {
   const params = new URLSearchParams(search);
   const paymentIntentId = params.get('payment_intent');
 
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [portalError, setPortalError] = useState('');
-
-  // On mount, exchange the PaymentIntent ID for a signed scan token and persist it.
-  // This runs once — failures are silent (user still lands on the success page).
+  // Exchange PaymentIntent for a signed scan token and store it
   useEffect(() => {
     if (!paymentIntentId) return;
     void (async () => {
@@ -34,34 +28,10 @@ export function Success() {
           localStorage.setItem(SCAN_TOKEN_KEY, data.token);
         }
       } catch {
-        // Non-fatal — the user is still subscribed; they just won't get instant paid scans
-        // until the token is issued on a future visit.
+        // Non-fatal — they can sign in at /account
       }
     })();
   }, [paymentIntentId]);
-
-  async function openBillingPortal() {
-    if (!paymentIntentId) return;
-    setPortalLoading(true);
-    setPortalError('');
-    try {
-      const res = await fetch(`${BASE}/api/billing-portal`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentIntentId }),
-      });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        setPortalError(data.error ?? 'Could not open billing portal. Please try again.');
-        return;
-      }
-      window.location.href = data.url;
-    } catch {
-      setPortalError('Network error — could not reach billing portal.');
-    } finally {
-      setPortalLoading(false);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-20">
@@ -103,34 +73,15 @@ export function Success() {
             Back to homepage
           </Button>
 
-          {/* Only show Manage subscription when we have a payment_intent param */}
-          {paymentIntentId && (
-            <Button
-              onClick={openBillingPortal}
-              disabled={portalLoading}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2"
-              data-testid="button-manage-subscription"
-            >
-              {portalLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Opening…
-                </>
-              ) : (
-                <>
-                  <ExternalLink className="h-4 w-4" />
-                  Manage subscription
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            onClick={() => navigate('/account')}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2"
+            data-testid="button-manage-account"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            View my account
+          </Button>
         </div>
-
-        {portalError && (
-          <p className="mt-4 text-sm text-red-400 bg-red-950/40 border border-red-800 rounded px-4 py-2">
-            {portalError}
-          </p>
-        )}
       </div>
     </div>
   );

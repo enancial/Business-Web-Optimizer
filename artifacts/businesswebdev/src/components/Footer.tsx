@@ -75,6 +75,13 @@ export function Footer() {
             >
               FAQ
             </a>
+            <a
+              href="/account"
+              className="text-sm text-white/60 hover:text-white transition-colors"
+              data-testid="link-footer-account"
+            >
+              My Account
+            </a>
           </div>
         </div>
       </div>
