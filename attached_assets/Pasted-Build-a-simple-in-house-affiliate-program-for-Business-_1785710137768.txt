@@ -1,0 +1,263 @@
+Build a simple, in‑house affiliate program for Business Web Optimizer, fully automated for tracking and commission calculation, using Stripe and our existing stack. Keep it as simple and care‑free as possible. Do not change existing pricing, plans, or core checkout logic beyond adding ref tracking and affiliate metadata.
+
+Goals:
+
+Affiliates can sign up and get a unique referral code and dashboard.
+
+Their referrals are tracked via ref on checkout links.
+
+Commissions are automatically calculated from Stripe subscription invoices.
+
+We can generate a monthly payout report (CSV) to pay affiliates manually via PayPal/bank.
+
+Requirements:
+
+Data model
+Create tables/collections (using the existing DB/ORM in this project):
+
+affiliates:
+
+id
+
+name
+
+email (unique)
+
+code (unique, e.g. AFF123)
+
+website (optional)
+
+paypal_email or payout_info
+
+active (boolean)
+
+created_at
+
+affiliate_conversions:
+
+id
+
+affiliate_id (FK to affiliates)
+
+stripe_customer_id
+
+stripe_subscription_id
+
+plan (optimizer | optimizer-pro)
+
+status (active | canceled | refunded)
+
+commission_rate (decimal, e.g. 0.30)
+
+created_at
+
+affiliate_earnings:
+
+id
+
+affiliate_id
+
+stripe_invoice_id
+
+amount_cents (invoice total)
+
+commission_cents (amount owed to affiliate)
+
+period_month (int 1–12)
+
+period_year (int YYYY)
+
+paid (boolean)
+
+created_at
+
+Affiliate signup & codes
+Add a simple /affiliates/join page with a form fields:
+
+name
+
+email
+
+website
+
+“How will you promote?”
+
+PayPal email (or payout info)
+
+On submit:
+
+Create an affiliates row.
+
+Generate a unique code (e.g. "AFF" + random alphanumeric) and mark the affiliate as active.
+
+After signup, show a confirmation page with:
+
+Their unique links:
+
+https://businessweboptimizer.com/checkout?product=optimizer&ref=CODE
+
+https://businessweboptimizer.com/checkout?product=optimizer-pro&ref=CODE
+
+Basic promo copy they can paste (short paragraph + example tweet/post).
+
+Tracking referrals at checkout
+On the checkout page:
+
+Read ref from query params.
+
+If present and valid (exists in affiliates and active):
+
+Store it in the session/context for this checkout.
+
+When creating the Stripe Checkout Session or Payment Intent, include:
+
+metadata["affiliate_code"] = "CODE".
+
+Do NOT change the existing checkout flow (Payment Element, success/cancel pages); just extend it with affiliate metadata.
+
+Stripe webhooks → auto commission
+In the existing Stripe webhook handler:
+
+On checkout.session.completed or customer.subscription.created:
+
+If metadata.affiliate_code exists:
+
+Look up the affiliate by code.
+
+Create an affiliate_conversions record linked to that subscription, with:
+
+plan set to optimizer or optimizer-pro based on the product.
+
+commission_rate = 0.30.
+
+status = "active".
+
+On invoice.paid (for subscription invoices):
+
+If the subscription has an associated affiliate_conversions record:
+
+Check whether we are still within the first 12 months from affiliate_conversions.created_at; if not, skip commission.
+
+Compute commission as 30% of the invoice amount (in cents).
+
+Create an affiliate_earnings row with:
+
+amount_cents
+
+commission_cents
+
+period_month, period_year
+
+paid = false
+
+On customer.subscription.deleted and relevant refund events:
+
+Update affiliate_conversions.status to canceled or refunded as appropriate.
+
+Stop future commission accrual for that subscription.
+
+Commission rules:
+
+30% of net revenue per invoice for:
+
+optimizer ($29/mo)
+
+optimizer-pro ($79/mo)
+
+Only for the first 12 months from affiliate_conversions.created_at.
+
+Monthly payout report (admin)
+Add an admin route (protected) like /admin/affiliate-payouts?month=YYYY-MM:
+
+For the given month/year:
+
+Sum commission_cents in affiliate_earnings where paid = false, grouped by affiliate.
+
+Apply a minimum payout threshold of $50 (5,000 cents).
+
+Return or render a CSV with columns:
+
+affiliate_name
+
+affiliate_email
+
+paypal_email
+
+amount_cents
+
+currency (use existing site currency, e.g. usd)
+
+period_month
+
+period_year
+
+Provide a simple button or link in an admin view to download this CSV.
+
+After we pay affiliates manually, we’ll mark the corresponding affiliate_earnings rows as paid = true. You can:
+
+Add a simple admin UI to mark rows as paid, or
+
+Provide a small script/endpoint to update them by ID.
+
+Affiliate dashboard (basic)
+Add a simple /affiliates/dashboard page:
+
+Authentication:
+
+Prefer a passwordless email login (magic link) using our existing auth if available.
+
+If we don’t have auth, implement a simple “email + one‑time code” flow; do NOT overcomplicate.
+
+Once authenticated as an affiliate:
+
+Show:
+
+Their unique links for:
+
+Optimizer: https://businessweboptimizer.com/checkout?product=optimizer&ref=CODE
+
+Optimizer Pro: https://businessweboptimizer.com/checkout?product=optimizer-pro&ref=CODE
+
+Stats:
+
+Total referred subscriptions (active).
+
+Total earnings (sum(commission_cents)).
+
+Current month earnings.
+
+Paid vs unpaid totals.
+
+Show basic promo copy and banner placeholders (static text + image slots).
+
+Keep the UI simple, matching the current Optimizer design system (colors, typography, buttons).
+
+Constraints
+Do not change existing pricing, plans, or core checkout logic beyond adding ref tracking and Stripe metadata.
+
+Keep UI simple and consistent with the current Business Web Optimizer design.
+
+Favor simple, robust logic over cleverness.
+
+Use environment variables for any new secrets if needed, and document them clearly.
+
+Output
+When you’re done, provide:
+
+A list of the new files/routes you created (e.g., /affiliates/join, /affiliates/dashboard, /admin/affiliate-payouts, DB migration files).
+
+Key code snippets for:
+
+Affiliate signup & code generation.
+
+Checkout ref handling + Stripe metadata.
+
+Webhook handling for commissions (checkout.session.completed, invoice.paid, subscription cancellation/refund).
+
+Payout report generation.
+
+Confirmation that:
+
+Existing checkout and subscriptions still work as before.
+
+The new affiliate flow works end‑to‑end in dev (signup → referral → paid invoice → earnings → payout CSV).

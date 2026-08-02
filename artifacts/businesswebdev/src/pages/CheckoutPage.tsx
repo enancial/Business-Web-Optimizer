@@ -340,6 +340,7 @@ export function CheckoutPage() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const productParam = params.get('product');
+  const refParam = params.get('ref');
 
   const product: Product | null =
     productParam === 'optimizer' || productParam === 'optimizer-pro'
@@ -391,6 +392,7 @@ export function CheckoutPage() {
       const data = await apiFetch<IntentResult>('/create-payment-intent', {
         product,
         ...(promo ? { promotionCode: promo.promotionCodeId } : {}),
+        ...(refParam ? { affiliateCode: refParam } : {}),
       });
 
       setIntentResult(data);

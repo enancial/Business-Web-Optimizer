@@ -10,6 +10,8 @@
 import type Stripe from 'stripe';
 import type { Logger } from 'pino';
 import { getUncachableStripeClient } from '../stripeClient';
+import { db, affiliates, affiliateConversions, affiliateEarnings } from '@workspace/db';
+import { eq, and } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
 // Main dispatcher — call this after stripeSync.processWebhook() returns
@@ -25,6 +27,12 @@ export async function handleWebhookEvent(
         event.data.object as Stripe.PaymentIntent,
         log,
       );
+      break;
+    case 'invoice.paid':
+      await onInvoicePaid(event.data.object as Stripe.Invoice, log);
+      break;
+    case 'customer.subscription.deleted':
+      await onSubscriptionDeleted(event.data.object as Stripe.Subscription, log);
       break;
     default:
       // All other events are handled by stripe-replit-sync — nothing to do here.
@@ -151,4 +159,150 @@ async function onPaymentIntentSucceeded(
 
   // stripe-replit-sync will sync this subscription to the local DB when
   // the customer.subscription.created webhook arrives — no extra DB work needed.
+
+  // Record affiliate conversion if this checkout was referred
+  await recordAffiliateConversion(
+    paymentIntent.metadata?.affiliate_code,
+    customerId,
+    subscription.id,
+    paymentIntent.metadata?.product,
+    log,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Affiliate: record a new conversion after subscription creation
+// ---------------------------------------------------------------------------
+
+async function recordAffiliateConversion(
+  affiliateCode: string | undefined,
+  customerId: string,
+  subscriptionId: string,
+  product: string | undefined,
+  log: Logger,
+): Promise<void> {
+  if (!affiliateCode) return;
+
+  const [affiliate] = await db
+    .select()
+    .from(affiliates)
+    .where(and(eq(affiliates.code, affiliateCode), eq(affiliates.active, true)))
+    .limit(1);
+
+  if (!affiliate) {
+    log.warn(
+      { affiliateCode, subscriptionId },
+      'Affiliate code in PaymentIntent metadata not found — skipping conversion',
+    );
+    return;
+  }
+
+  await db
+    .insert(affiliateConversions)
+    .values({
+      affiliateId: affiliate.id,
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscriptionId,
+      plan: product === 'optimizer-pro' ? 'optimizer-pro' : 'optimizer',
+      status: 'active',
+      commissionRate: 0.3,
+    })
+    .onConflictDoNothing();
+
+  log.info(
+    { affiliateId: affiliate.id, subscriptionId, plan: product },
+    'Affiliate conversion recorded',
+  );
+}
+
+// ---------------------------------------------------------------------------
+// invoice.paid — accrue earnings for the first 12 months
+// ---------------------------------------------------------------------------
+
+async function onInvoicePaid(invoice: Stripe.Invoice, log: Logger): Promise<void> {
+  const subscriptionId =
+    typeof invoice.subscription === 'string' ? invoice.subscription : null;
+  if (!subscriptionId || !invoice.amount_paid || invoice.amount_paid <= 0) return;
+
+  // Find an active affiliate conversion for this subscription
+  const [conversion] = await db
+    .select()
+    .from(affiliateConversions)
+    .where(
+      and(
+        eq(affiliateConversions.stripeSubscriptionId, subscriptionId),
+        eq(affiliateConversions.status, 'active'),
+      ),
+    )
+    .limit(1);
+
+  if (!conversion) return;
+
+  // Enforce the 12-month commission window
+  const conversionDate = new Date(conversion.createdAt);
+  const now = new Date();
+  const monthsElapsed =
+    (now.getFullYear() - conversionDate.getFullYear()) * 12 +
+    (now.getMonth() - conversionDate.getMonth());
+
+  if (monthsElapsed >= 12) {
+    log.info(
+      { subscriptionId, monthsElapsed },
+      'Affiliate commission window expired (12 months) — skipping earnings row',
+    );
+    return;
+  }
+
+  // Idempotency: skip if we already recorded earnings for this invoice
+  const existing = await db
+    .select({ id: affiliateEarnings.id })
+    .from(affiliateEarnings)
+    .where(eq(affiliateEarnings.stripeInvoiceId, invoice.id))
+    .limit(1);
+  if (existing.length > 0) return;
+
+  const periodDate = new Date((invoice.period_start ?? 0) * 1000);
+  const commissionCents = Math.round(invoice.amount_paid * conversion.commissionRate);
+
+  await db.insert(affiliateEarnings).values({
+    affiliateId: conversion.affiliateId,
+    stripeInvoiceId: invoice.id,
+    amountCents: invoice.amount_paid,
+    commissionCents,
+    periodMonth: periodDate.getMonth() + 1,
+    periodYear: periodDate.getFullYear(),
+    paid: false,
+  });
+
+  log.info(
+    {
+      affiliateId: conversion.affiliateId,
+      invoiceId: invoice.id,
+      amountCents: invoice.amount_paid,
+      commissionCents,
+    },
+    'Affiliate earnings recorded for invoice.paid',
+  );
+}
+
+// ---------------------------------------------------------------------------
+// customer.subscription.deleted — stop future commissions
+// ---------------------------------------------------------------------------
+
+async function onSubscriptionDeleted(
+  subscription: Stripe.Subscription,
+  log: Logger,
+): Promise<void> {
+  const updated = await db
+    .update(affiliateConversions)
+    .set({ status: 'canceled' })
+    .where(eq(affiliateConversions.stripeSubscriptionId, subscription.id))
+    .returning({ id: affiliateConversions.id });
+
+  if (updated.length > 0) {
+    log.info(
+      { subscriptionId: subscription.id },
+      'Affiliate conversion marked as canceled following subscription deletion',
+    );
+  }
 }

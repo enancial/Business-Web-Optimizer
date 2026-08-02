@@ -14,6 +14,9 @@ import { Success } from '@/pages/Success';
 import { Cancel } from '@/pages/Cancel';
 import { CheckoutPage } from '@/pages/CheckoutPage';
 import { AccountPage } from '@/pages/AccountPage';
+import { AffiliateJoinPage } from '@/pages/AffiliateJoinPage';
+import { AffiliateDashboardPage } from '@/pages/AffiliateDashboardPage';
+import { AdminPayoutsPage } from '@/pages/AdminPayoutsPage';
 
 const queryClient = new QueryClient();
 
@@ -38,6 +41,9 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
           <Switch>
+            <Route path="/admin/affiliate-payouts" component={AdminPayoutsPage} />
+            <Route path="/affiliates/dashboard" component={AffiliateDashboardPage} />
+            <Route path="/affiliates/join" component={AffiliateJoinPage} />
             <Route path="/account" component={AccountPage} />
             <Route path="/success" component={Success} />
             <Route path="/cancel" component={Cancel} />

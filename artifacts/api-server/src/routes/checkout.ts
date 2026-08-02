@@ -1,6 +1,8 @@
 import { Router, type IRouter } from 'express';
 import type Stripe from 'stripe';
 import { getUncachableStripeClient, getStripePublishableKey, getStripeSecretKey } from '../stripeClient';
+import { db, affiliates } from '@workspace/db';
+import { eq, and } from 'drizzle-orm';
 
 const router: IRouter = Router();
 
@@ -174,9 +176,10 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
  *            discountLabel?: string }
  */
 router.post('/create-payment-intent', async (req, res): Promise<void> => {
-  const { product, promotionCode } = req.body as {
+  const { product, promotionCode, affiliateCode } = req.body as {
     product: unknown;
     promotionCode?: unknown;
+    affiliateCode?: unknown;
   };
 
   if (!isValidProduct(product)) {
@@ -226,6 +229,19 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
     discountLabel: promoCode ? discountLabel(promoCode.coupon) : undefined,
   };
 
+  // ── Affiliate code validation ────────────────────────────────────────────
+  // Silently ignore invalid codes so existing checkout flow is never blocked.
+  let validatedAffiliateCode: string | null = null;
+  if (typeof affiliateCode === 'string' && affiliateCode.trim()) {
+    const code = affiliateCode.trim().toUpperCase();
+    const [aff] = await db
+      .select({ code: affiliates.code })
+      .from(affiliates)
+      .where(and(eq(affiliates.code, code), eq(affiliates.active, true)))
+      .limit(1);
+    if (aff) validatedAffiliateCode = aff.code;
+  }
+
   // ── Free order ($0 after discount) ────────────────────────────────────────
   // Stripe does not accept PaymentIntents with amount = 0. Create a free
   // subscription with the promotion code applied.
@@ -264,6 +280,7 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
       ...(promoCode
         ? { promotion_code_id: promoCode.id, promotion_code: promoCode.code }
         : {}),
+      ...(validatedAffiliateCode ? { affiliate_code: validatedAffiliateCode } : {}),
     },
   });
 
