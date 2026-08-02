@@ -74,31 +74,38 @@ async function onPaymentIntentSucceeded(
   const stripe = await getUncachableStripeClient();
 
   // ── Idempotency check ────────────────────────────────────────────────────
-  // If a subscription already exists for this customer + price, don't create
-  // a duplicate. This keeps the handler safe to re-run on retried webhooks.
+  // Check for ANY active optimizer/optimizer-pro subscription, not just an
+  // exact price match.  This prevents a second subscription if the same
+  // customer buys again (e.g. navigating back to /checkout) or tries to
+  // upgrade through checkout instead of the /account plan-change flow.
   const existing = await stripe.subscriptions.list({
     customer: customerId,
-    price: priceId,
-    // Check both active and incomplete (might still be processing)
     status: 'all',
-    limit: 5,
+    limit: 10,
   });
+
+  const knownPriceIds = new Set(
+    [priceId, process.env.OPTIMIZER_PRICE_ID, process.env.OPTIMIZER_PRO_PRICE_ID].filter(
+      Boolean,
+    ) as string[],
+  );
 
   const live = existing.data.filter(
     (s) =>
-      s.status === 'active' ||
-      s.status === 'trialing' ||
-      s.status === 'incomplete',
+      (s.status === 'active' || s.status === 'trialing' || s.status === 'incomplete') &&
+      s.items.data.some((item) => knownPriceIds.has(item.price.id)),
   );
 
   if (live.length > 0) {
-    log.info(
+    log.warn(
       {
         paymentIntentId: paymentIntent.id,
         existingSubscriptionId: live[0].id,
-        status: live[0].status,
+        existingStatus: live[0].status,
+        existingPriceId: live[0].items.data[0]?.price.id,
+        requestedPriceId: priceId,
       },
-      'Subscription already exists for this customer+price — skipping duplicate creation',
+      'Skipping duplicate subscription creation for customer — active optimizer subscription already exists',
     );
     return;
   }

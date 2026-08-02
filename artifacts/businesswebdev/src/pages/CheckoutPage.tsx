@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import { loadStripe, type StripeElementsOptions } from '@stripe/stripe-js';
 import {
@@ -354,6 +354,23 @@ export function CheckoutPage() {
 
   const meta = product ? PRODUCT_META[product] : null;
 
+  const [alreadySubscribed, setAlreadySubscribed] = useState(false);
+
+  useEffect(() => {
+    const raw = localStorage.getItem('bwo_scan_token');
+    if (!raw) return;
+    try {
+      const parts = raw.split('.');
+      const p = JSON.parse(
+        atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')),
+      ) as { tier?: string; exp?: number };
+      const now = Math.floor(Date.now() / 1000);
+      if (p.tier === 'paid' && typeof p.exp === 'number' && p.exp > now) {
+        setAlreadySubscribed(true);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   function goBack() {
     navigate('/');
   }
@@ -394,6 +411,41 @@ export function CheckoutPage() {
     } finally {
       setIntentLoading(false);
     }
+  }
+
+  // ── Already-subscribed guard ─────────────────────────────────────────────
+  if (alreadySubscribed) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <header className="border-b px-4 sm:px-6 py-4 flex items-center gap-3">
+          <button
+            onClick={goBack}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <span className="font-semibold text-sm">Secure Checkout</span>
+        </header>
+        <div className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="text-center max-w-sm">
+            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">You already have an active plan</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Manage your subscription, update payment details, or change your
+              plan from your account page.
+            </p>
+            <Button
+              asChild
+              className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+              data-testid="button-already-subscribed-account"
+            >
+              <a href="/account">Manage it here →</a>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // ── Invalid product param ────────────────────────────────────────────────

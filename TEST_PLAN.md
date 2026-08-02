@@ -64,14 +64,27 @@ Tests run with **vitest** and **supertest** — no real Stripe calls are made (S
 
 ---
 
-### 3 — Optimizer Pro Plan (paid scan)
+### 3 — Optimizer Pro Plan (paid scan + Pro-exclusive features)
 
-Same steps as Section 2, but use the **Optimizer Pro ($79/mo)** checkout. Verify:
+Same base steps as Section 2, but use the **Optimizer Pro ($79/mo)** checkout. Verify:
 - `product: "optimizer-pro"` in the decoded JWT
-- Full scan results returned
+- Full scan results returned (no 3-issue cap, same as Optimizer)
 - Plan name in `/account` shows "Optimizer Pro"
 
-> **Note:** Optimizer and Optimizer Pro currently run the same 13-check scan. Both receive fully ungated reports. Deeper Pro-specific checks (competitor comparison, white-label PDF) will be gated by the product field when implemented.
+**Pro-exclusive: Schema.org Structured Data Analysis**
+
+| Step | Action | Expected result |
+|---|---|---|
+| 1 | Run a scan with an Optimizer Pro token | Results panel shows a **"Schema.org Structured Data"** card with an `Optimizer Pro` badge |
+| 2 | Click ▾ to expand the card | Shows types found, recommended additions, warnings, and a 0–100 score |
+| 3 | Network tab → response body | `schemaDeepDive` object present: `typesFound`, `typesRecommended`, `warnings`, `score`, `summary` |
+| 4 | Check `whiteLabel` field | `whiteLabel: true` in the scan response |
+| 5 | Run same URL with an Optimizer token | **No** schema card shown — teaser box appears instead ("Upgrade to Optimizer Pro") |
+| 6 | Run same URL with no token (free) | No schema card, no teaser |
+
+**Pro-exclusive: White-label flag**
+
+The API returns `whiteLabel: true` on Pro scans. PDF generation (when implemented) will use this to suppress BWO branding and allow a custom logo. The flag is present in the API response now; front-end PDF gating is marked TODO below.
 
 ---
 
@@ -226,11 +239,19 @@ Open [Stripe Dashboard → Test mode](https://dashboard.stripe.com/test):
 | Token re-issuance | ❌ | ✅ | ✅ |
 | Plan change | ❌ | ✅ | ✅ |
 | Cancel / uncancel | ❌ | ✅ | ✅ |
+| **Schema.org deep-dive** | ❌ | ❌ (teaser shown) | ✅ |
+| **White-label API flag** | ❌ | ❌ | ✅ (`whiteLabel: true`) |
+| Checkout re-entry guard | — | redirects to `/account` | redirects to `/account` |
+| Duplicate subscription prevention | — | ✅ (webhook idempotency) | ✅ (webhook idempotency) |
 
 ---
 
-## Known Limitations
+## Known Limitations / TODO
 
-- **Optimizer Pro** currently has no additional scan checks beyond Optimizer. The `product` field in the JWT is stored for future gating of Pro-only features (competitor comparison, white-label reports, API access).
+- **Scheduled auto-scans UI** — not yet implemented. The pricing page mentions this for Optimizer Pro. The `product` field in the JWT is available for future gating.
+- **Competitor site comparison** — not yet implemented. Pricing page lists this for Optimizer Pro. Requires additional fetch + analysis of competitor URLs.
+- **White-label PDF download** — `whiteLabel: true` is returned in the API; front-end PDF generation is not yet implemented. The flag will suppress BWO branding when a PDF export feature is added.
+- **API access / developer API** — not yet implemented for Pro subscribers.
+- **Priority support queue** — not a software feature; handled operationally.
 - The `billingPortal.ts` route remains in the codebase but is not linked from the UI. All account management is on-site.
 - Token expiry is 30 days. Users must re-authenticate via email if the token is not refreshed before expiry.

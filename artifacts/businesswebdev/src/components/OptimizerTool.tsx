@@ -9,6 +9,10 @@ import {
   AlertTriangle,
   Loader2,
   Mail,
+  Sparkles,
+  Code2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -21,6 +25,14 @@ interface Issue {
   detail: string;
 }
 
+interface SchemaDeepDive {
+  typesFound: string[];
+  typesRecommended: string[];
+  warnings: string[];
+  score: number;
+  summary: string;
+}
+
 interface ScanResult {
   url: string;
   score: number;
@@ -28,6 +40,8 @@ interface ScanResult {
   fetchTimeMs: number;
   gated?: boolean;
   totalIssues?: number;
+  schemaDeepDive?: SchemaDeepDive;
+  whiteLabel?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +102,132 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 // ---------------------------------------------------------------------------
+// Pro-exclusive sub-components
+// ---------------------------------------------------------------------------
+
+function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
+  const [expanded, setExpanded] = useState(false);
+  const scoreColor = data.score < 40 ? 'text-red-600' : data.score < 70 ? 'text-amber-600' : 'text-green-600';
+
+  return (
+    <div className="mb-6 bg-white border border-purple-200 rounded-2xl shadow-sm overflow-hidden" data-testid="schema-deep-dive">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
+        <div className="flex items-center gap-2">
+          <Code2 className="h-4 w-4 text-purple-600" />
+          <span className="font-semibold text-gray-900 text-sm">Schema.org Structured Data</span>
+          <span className="flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full">
+            <Sparkles className="h-3 w-3" />
+            Optimizer Pro
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={`text-sm font-bold ${scoreColor}`}>{data.score}/100</span>
+          <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="px-6 py-4">
+        <p className="text-sm text-gray-700">{data.summary}</p>
+      </div>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="px-6 pb-5 space-y-4 border-t border-purple-50 pt-4">
+          {data.typesFound.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Types found</p>
+              <div className="flex flex-wrap gap-2">
+                {data.typesFound.map((t) => (
+                  <span key={t} className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.typesRecommended.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Recommended additions</p>
+              <div className="flex flex-wrap gap-2">
+                {data.typesRecommended.map((t) => (
+                  <span key={t} className="text-xs px-2.5 py-1 bg-gray-50 text-gray-500 border border-dashed border-gray-300 rounded-full">
+                    + {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.warnings.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Warnings</p>
+              <ul className="space-y-1.5">
+                {data.warnings.map((w, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-amber-800">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500" />
+                    {w}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProFeatureTeaser() {
+  return (
+    <div className="mb-6 rounded-2xl border border-dashed border-purple-300 bg-purple-50/60 px-6 py-5" data-testid="pro-feature-teaser">
+      <div className="flex items-start gap-3">
+        <Code2 className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 mb-0.5">
+            Schema.org Structured Data Analysis
+            <span className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full align-middle">
+              <Sparkles className="h-3 w-3" />
+              Optimizer Pro
+            </span>
+          </p>
+          <p className="text-xs text-gray-500 mb-3">
+            See how your competitors rank with structured data. Optimizer Pro analyses every JSON-LD block on your page — types found, missing rich-snippet opportunities, and a structured-data score.
+          </p>
+          <a
+            href="/checkout?product=optimizer-pro"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 hover:text-purple-900 underline underline-offset-2 transition-colors"
+          >
+            <Sparkles className="h-3 w-3" />
+            Upgrade to Optimizer Pro — $79/mo
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper: decode product from a scan token without verifying signature (display only)
+function getTokenProduct(raw: string | null): string | null {
+  if (!raw) return null;
+  try {
+    const parts = raw.split('.');
+    const p = JSON.parse(
+      atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as { product?: string; tier?: string; exp?: number };
+    const now = Math.floor(Date.now() / 1000);
+    if (p.tier === 'paid' && typeof p.exp === 'number' && p.exp > now) {
+      return p.product ?? null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -100,6 +240,9 @@ export function OptimizerTool() {
   const [state, setState] = useState<ScanState>('idle');
   const [scanError, setScanError] = useState('');
   const [result, setResult] = useState<ScanResult | null>(null);
+
+  // Decoded once on mount — used to decide whether to show Pro section or teaser
+  const [tokenProduct] = useState(() => getTokenProduct(localStorage.getItem(SCAN_TOKEN_KEY)));
 
   const [emailState, setEmailState] = useState<EmailState>('idle');
   const [emailError, setEmailError] = useState('');
@@ -500,6 +643,13 @@ export function OptimizerTool() {
                   ))}
                 </div>
               )}
+
+              {/* Schema.org deep-dive (Optimizer Pro) / upgrade teaser (Optimizer) */}
+              {result.schemaDeepDive ? (
+                <SchemaDeepDiveSection data={result.schemaDeepDive} />
+              ) : tokenProduct === 'optimizer' ? (
+                <ProFeatureTeaser />
+              ) : null}
 
               {/* Gated issues teaser */}
               {result.gated && result.totalIssues != null && (

@@ -14,6 +14,19 @@ export interface ScanIssue {
   detail: string;
 }
 
+export interface SchemaDeepDive {
+  /** @type values found in JSON-LD blocks on the page */
+  typesFound: string[];
+  /** High-value schema types not present that would improve rich-snippet eligibility */
+  typesRecommended: string[];
+  /** Warnings about missing or malformed structured data */
+  warnings: string[];
+  /** 0–100 score based on coverage and correctness */
+  score: number;
+  /** Human-readable summary */
+  summary: string;
+}
+
 export interface ScanResult {
   url: string;
   score: number;
@@ -22,6 +35,92 @@ export interface ScanResult {
   /** Present when the response is gated — total issues found before slicing */
   totalIssues?: number;
   gated?: boolean;
+  /** Schema.org structured-data deep-dive (Optimizer Pro only) */
+  schemaDeepDive?: SchemaDeepDive;
+  /** White-label flag — suppress BWO branding in PDF exports (Optimizer Pro only) */
+  whiteLabel?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Schema.org deep-dive analyser (Optimizer Pro exclusive)
+// ---------------------------------------------------------------------------
+
+const HIGH_VALUE_SCHEMA_TYPES = [
+  'Organization',
+  'LocalBusiness',
+  'WebSite',
+  'WebPage',
+  'BreadcrumbList',
+  'FAQPage',
+  'Article',
+  'BlogPosting',
+  'Product',
+  'SiteLinksSearchBox',
+];
+
+function analyseSchemaOrg(html: string): SchemaDeepDive {
+  const $ = cheerio.load(html);
+  const typesFound: string[] = [];
+  const warnings: string[] = [];
+
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const text = $(el).html() ?? '';
+      type LdNode = { '@type'?: string | string[]; '@graph'?: LdNode[] };
+      const parsed = JSON.parse(text) as LdNode;
+
+      function extractTypes(node: LdNode) {
+        const t = node['@type'];
+        if (typeof t === 'string') typesFound.push(t);
+        else if (Array.isArray(t)) typesFound.push(...t.filter((x): x is string => typeof x === 'string'));
+        if (Array.isArray(node['@graph'])) node['@graph'].forEach(extractTypes);
+      }
+      extractTypes(parsed);
+    } catch {
+      warnings.push('Found a JSON-LD block with invalid syntax — check for parse errors.');
+    }
+  });
+
+  const uniqueTypes = [...new Set(typesFound)];
+
+  // Recommend the most valuable missing types (up to 4)
+  const typesRecommended = HIGH_VALUE_SCHEMA_TYPES.filter(
+    (t) => !uniqueTypes.includes(t),
+  ).slice(0, 4);
+
+  // Generate actionable warnings
+  if (uniqueTypes.length === 0) {
+    warnings.push(
+      'No structured data found — adding schema.org markup unlocks rich-snippet eligibility in Google Search.',
+    );
+  }
+  if (!uniqueTypes.some((t) => ['Organization', 'LocalBusiness'].includes(t))) {
+    warnings.push(
+      'Missing Organization or LocalBusiness schema — required for knowledge panel and brand-authority signals.',
+    );
+  }
+  if (!uniqueTypes.includes('BreadcrumbList') && uniqueTypes.length > 0) {
+    warnings.push(
+      'Missing BreadcrumbList — add it to enable breadcrumb rich results in search.',
+    );
+  }
+  if (!uniqueTypes.some((t) => ['WebSite', 'WebPage'].includes(t))) {
+    warnings.push(
+      'Missing WebSite or WebPage schema — these anchor your structured-data graph and improve entity understanding.',
+    );
+  }
+
+  // Score: coverage × 100, minus 10 per warning, floor 0
+  const IDEAL_COUNT = 4;
+  const coverage = Math.min(uniqueTypes.length / IDEAL_COUNT, 1);
+  const score = Math.max(0, Math.round(coverage * 100 - warnings.length * 10));
+
+  const summary =
+    uniqueTypes.length === 0
+      ? 'No schema.org markup detected. Add structured data to improve rich-snippet eligibility and search-engine entity understanding.'
+      : `Found ${uniqueTypes.length} schema type${uniqueTypes.length !== 1 ? 's' : ''}: ${uniqueTypes.join(', ')}.${typesRecommended.length > 0 ? ` Consider adding: ${typesRecommended.slice(0, 2).join(', ')}.` : ' Good coverage!'}`;
+
+  return { typesFound: uniqueTypes, typesRecommended, warnings, score, summary };
 }
 
 // ---------------------------------------------------------------------------
@@ -290,14 +389,16 @@ router.post('/scan', async (req, res): Promise<void> => {
 
   // Determine tier from verified JWT — never trust the request body.
   let isPaid = false;
+  let isPro = false;
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.slice(7);
     const secret = process.env.SESSION_SECRET;
     if (secret) {
       try {
-        const payload = jwt.verify(token, secret) as { tier?: string };
+        const payload = jwt.verify(token, secret) as { tier?: string; product?: string };
         isPaid = payload.tier === 'paid';
+        isPro = payload.product === 'optimizer-pro';
       } catch (err) {
         // Token provided but expired — tell the client explicitly so they can re-auth
         if (err instanceof Error && err.name === 'TokenExpiredError') {
@@ -383,8 +484,20 @@ router.post('/scan', async (req, res): Promise<void> => {
       result.totalIssues = totalIssues;
     }
 
+    // Optimizer Pro: schema.org deep-dive + white-label flag
+    if (isPro) {
+      result.schemaDeepDive = analyseSchemaOrg(html);
+      result.whiteLabel = true;
+    }
+
     req.log.info(
-      { url: targetUrl, score: result.score, total: totalIssues, returned: result.issues.length, tier: isPaid ? 'paid' : 'free' },
+      {
+        url: targetUrl,
+        score: result.score,
+        total: totalIssues,
+        returned: result.issues.length,
+        tier: isPaid ? (isPro ? 'optimizer-pro' : 'optimizer') : 'free',
+      },
       'Scan complete',
     );
     res.json(result);

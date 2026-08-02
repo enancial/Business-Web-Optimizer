@@ -178,6 +178,69 @@ describe('POST /api/scan — expired token', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Pro-exclusive features (Task #9)
+// ---------------------------------------------------------------------------
+
+describe('POST /api/scan — Optimizer Pro exclusive features', () => {
+  it('Optimizer token: schemaDeepDive and whiteLabel are absent', async () => {
+    const res = await request(app)
+      .post('/api/scan')
+      .set('Authorization', `Bearer ${makePaidToken()}`) // product: 'optimizer'
+      .send({ url: 'https://example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.schemaDeepDive).toBeUndefined();
+    expect(res.body.whiteLabel).toBeUndefined();
+  });
+
+  it('Optimizer Pro token: schemaDeepDive is present on BAD_HTML (no schemas found)', async () => {
+    const res = await request(app)
+      .post('/api/scan')
+      .set('Authorization', `Bearer ${makeProToken()}`)
+      .send({ url: 'https://example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.schemaDeepDive).toBeDefined();
+    expect(Array.isArray(res.body.schemaDeepDive.typesFound)).toBe(true);
+    expect(Array.isArray(res.body.schemaDeepDive.typesRecommended)).toBe(true);
+    expect(Array.isArray(res.body.schemaDeepDive.warnings)).toBe(true);
+    expect(typeof res.body.schemaDeepDive.score).toBe('number');
+    expect(typeof res.body.schemaDeepDive.summary).toBe('string');
+    // BAD_HTML has no JSON-LD → typesFound is empty, warnings should mention no schema
+    expect(res.body.schemaDeepDive.typesFound.length).toBe(0);
+    expect(res.body.schemaDeepDive.warnings.length).toBeGreaterThan(0);
+  });
+
+  it('Optimizer Pro token: schemaDeepDive detects WebPage schema in GOOD_HTML', async () => {
+    vi.stubGlobal('fetch', makeHtmlFetch(GOOD_HTML));
+    const res = await request(app)
+      .post('/api/scan')
+      .set('Authorization', `Bearer ${makeProToken()}`)
+      .send({ url: 'https://example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.schemaDeepDive.typesFound).toContain('WebPage');
+    // Good HTML has schema → fewer warnings, score > 0
+    expect(res.body.schemaDeepDive.score).toBeGreaterThan(0);
+  });
+
+  it('Optimizer Pro token: whiteLabel is true', async () => {
+    const res = await request(app)
+      .post('/api/scan')
+      .set('Authorization', `Bearer ${makeProToken()}`)
+      .send({ url: 'https://example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.whiteLabel).toBe(true);
+  });
+
+  it('Free tier: no Pro-exclusive fields returned', async () => {
+    const res = await request(app)
+      .post('/api/scan')
+      .send({ url: 'https://example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.schemaDeepDive).toBeUndefined();
+    expect(res.body.whiteLabel).toBeUndefined();
+  });
+});
+
 describe('POST /api/scan — tampered/malformed token', () => {
   it('tampered token (wrong secret): silently falls back to free tier', async () => {
     const res = await request(app)
