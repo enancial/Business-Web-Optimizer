@@ -263,8 +263,8 @@ export function OptimizerTool() {
                     </label>
                     <Input
                       id="website-url"
-                      type="url"
-                      placeholder="https://yoursite.com"
+                      type="text"
+                      placeholder="yoursite.com or https://yoursite.com"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       required
