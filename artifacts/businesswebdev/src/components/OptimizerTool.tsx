@@ -2,7 +2,18 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, AlertCircle, CheckCircle2, AlertTriangle, Loader2, Mail } from 'lucide-react';
+import {
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Mail,
+} from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Types (mirror the API's ScanResult shape)
+// ---------------------------------------------------------------------------
 
 interface Issue {
   severity: 'high' | 'medium' | 'low';
@@ -10,52 +21,22 @@ interface Issue {
   detail: string;
 }
 
-const MOCK_ISSUES: Issue[] = [
-  {
-    severity: 'high',
-    title: 'No clear above-the-fold value proposition',
-    detail: "Your hero doesn't immediately answer 'what do you do and who is it for.' Visitors leave within 5 seconds if they can't figure this out.",
-  },
-  {
-    severity: 'high',
-    title: 'Missing primary CTA on homepage',
-    detail: 'No prominent call-to-action button is visible without scrolling. You\'re losing conversions from warm visitors.',
-  },
-  {
-    severity: 'high',
-    title: 'Page load speed exceeds 4 seconds',
-    detail: 'Slow load times directly reduce conversion rates and hurt organic search rankings. Likely causes: unoptimized images, render-blocking scripts.',
-  },
-  {
-    severity: 'medium',
-    title: 'Meta description missing or too short',
-    detail: 'Your meta description is blank or under 80 characters, reducing click-through rates from search results.',
-  },
-  {
-    severity: 'medium',
-    title: 'No social proof visible on key landing pages',
-    detail: 'Testimonials, case studies, or logos are absent. Social proof significantly increases trust for first-time visitors.',
-  },
-  {
-    severity: 'medium',
-    title: 'Heading structure is broken (H1 → H4 skip)',
-    detail: 'Skipping heading levels confuses screen readers and weakens SEO. Use a logical H1 → H2 → H3 hierarchy.',
-  },
-  {
-    severity: 'low',
-    title: 'Open Graph tags not configured',
-    detail: 'Sharing your site on LinkedIn or Twitter will show a blank preview. Add og:title, og:description, and og:image tags.',
-  },
-  {
-    severity: 'low',
-    title: 'Contact form has no confirmation message',
-    detail: 'After submission, users see a blank page. Add a thank-you message to reduce confusion and repeat submissions.',
-  },
-];
+interface ScanResult {
+  url: string;
+  score: number;
+  issues: Issue[];
+  fetchTimeMs: number;
+}
 
-const SCORE = 42;
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
 function SeverityBadge({ severity }: { severity: Issue['severity'] }) {
   const styles = {
@@ -101,42 +82,86 @@ function ScoreRing({ score }: { score: number }) {
   );
 }
 
-type ScanState = 'idle' | 'scanning' | 'results';
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+type ScanState = 'idle' | 'scanning' | 'results' | 'error';
 type EmailState = 'idle' | 'sending' | 'sent' | 'error';
 
 export function OptimizerTool() {
   const [url, setUrl] = useState('');
   const [email, setEmail] = useState('');
   const [state, setState] = useState<ScanState>('idle');
-  const [progress, setProgress] = useState(0);
+  const [scanError, setScanError] = useState('');
+  const [result, setResult] = useState<ScanResult | null>(null);
+
   const [emailState, setEmailState] = useState<EmailState>('idle');
   const [emailError, setEmailError] = useState('');
+
+  // Fake progress bar that advances while the real fetch is in flight
+  const [progress, setProgress] = useState(0);
+
+  async function runProgressBar(signal: AbortSignal) {
+    const ticks = [10, 22, 38, 54, 68, 80, 90];
+    for (const pct of ticks) {
+      if (signal.aborted) return;
+      await new Promise((r) => setTimeout(r, 380));
+      setProgress(pct);
+    }
+  }
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
+
     setState('scanning');
     setProgress(0);
+    setScanError('');
+    setResult(null);
     setEmailState('idle');
     setEmailError('');
 
-    // Simulate progressive scan
-    const steps = [15, 35, 55, 72, 88, 100];
-    for (const step of steps) {
-      await new Promise((r) => setTimeout(r, 420));
-      setProgress(step);
-    }
+    const abort = new AbortController();
 
-    await new Promise((r) => setTimeout(r, 300));
-    setState('results');
+    // Kick off animated progress bar alongside the real fetch
+    void runProgressBar(abort.signal);
 
-    // Fire email report if address was provided
-    if (email.trim()) {
-      void sendReport(email.trim(), url.trim());
+    try {
+      const res = await fetch(`${BASE}/api/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+
+      abort.abort(); // stop the fake progress bar
+      const data = (await res.json()) as ScanResult & { error?: string };
+
+      if (!res.ok) {
+        setScanError(data.error ?? 'Scan failed. Please try again.');
+        setState('error');
+        return;
+      }
+
+      setProgress(100);
+      await new Promise((r) => setTimeout(r, 300));
+      setResult(data);
+      setState('results');
+
+      // Fire email if address was provided
+      if (email.trim()) {
+        void sendReport(email.trim(), data);
+      }
+    } catch (err) {
+      abort.abort();
+      setScanError(
+        err instanceof Error ? err.message : 'Network error — please try again.',
+      );
+      setState('error');
     }
   }
 
-  async function sendReport(toEmail: string, scannedUrl: string) {
+  async function sendReport(toEmail: string, scanResult: ScanResult) {
     setEmailState('sending');
     try {
       const res = await fetch(`${BASE}/api/send-report`, {
@@ -144,9 +169,9 @@ export function OptimizerTool() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: toEmail,
-          url: scannedUrl,
-          score: SCORE,
-          issues: MOCK_ISSUES,
+          url: scanResult.url,
+          score: scanResult.score,
+          issues: scanResult.issues,
         }),
       });
       const data = (await res.json()) as { sent?: boolean; error?: string };
@@ -167,12 +192,15 @@ export function OptimizerTool() {
     setProgress(0);
     setUrl('');
     setEmail('');
+    setResult(null);
+    setScanError('');
     setEmailState('idle');
     setEmailError('');
   }
 
-  const highCount = MOCK_ISSUES.filter((i) => i.severity === 'high').length;
-  const medCount = MOCK_ISSUES.filter((i) => i.severity === 'medium').length;
+  const highCount = result?.issues.filter((i) => i.severity === 'high').length ?? 0;
+  const medCount = result?.issues.filter((i) => i.severity === 'medium').length ?? 0;
+  const lowCount = result?.issues.filter((i) => i.severity === 'low').length ?? 0;
 
   return (
     <section id="optimizer-tool" className="py-20 bg-background">
@@ -191,11 +219,13 @@ export function OptimizerTool() {
             Run Your Optimization Scan
           </h2>
           <p className="text-lg text-muted-foreground">
-            Enter your website URL and get a prioritized list of improvements — free, in under 60 seconds.
+            Enter your website URL and get a prioritized list of improvements — free, in under 60
+            seconds.
           </p>
         </motion.div>
 
         <AnimatePresence mode="wait">
+          {/* ── Idle: entry form ── */}
           {state === 'idle' && (
             <motion.div
               key="form"
@@ -228,7 +258,9 @@ export function OptimizerTool() {
                   <div>
                     <label htmlFor="scan-email" className="block text-sm font-medium mb-1.5">
                       Email{' '}
-                      <span className="text-muted-foreground text-xs font-normal">(optional — get your report by email)</span>
+                      <span className="text-muted-foreground text-xs font-normal">
+                        (optional — get your report by email)
+                      </span>
                     </label>
                     <Input
                       id="scan-email"
@@ -259,6 +291,7 @@ export function OptimizerTool() {
             </motion.div>
           )}
 
+          {/* ── Scanning: progress ── */}
           {state === 'scanning' && (
             <motion.div
               key="scanning"
@@ -283,7 +316,32 @@ export function OptimizerTool() {
             </motion.div>
           )}
 
-          {state === 'results' && (
+          {/* ── Error ── */}
+          {state === 'error' && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-card border border-red-200 rounded-2xl p-8 shadow-sm text-center"
+              data-testid="scan-error"
+            >
+              <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2 text-red-700">Scan failed</h3>
+              <p className="text-sm text-muted-foreground mb-6">{scanError}</p>
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                className="gap-2"
+              >
+                Try again
+              </Button>
+            </motion.div>
+          )}
+
+          {/* ── Results ── */}
+          {state === 'results' && result && (
             <motion.div
               key="results"
               initial={{ opacity: 0, y: 16 }}
@@ -294,13 +352,24 @@ export function OptimizerTool() {
               {/* Score header */}
               <div className="bg-card border border-border rounded-2xl p-8 mb-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <ScoreRing score={SCORE} />
+                  <ScoreRing score={result.score} />
                   <div className="text-center sm:text-left">
-                    <h3 className="text-2xl font-bold mb-1">Optimization Score: {SCORE}/100</h3>
+                    <h3 className="text-2xl font-bold mb-1">
+                      Optimization Score: {result.score}/100
+                    </h3>
                     <p className="text-muted-foreground mb-4">
-                      Your site has significant room for improvement. We found{' '}
-                      <strong>{highCount} high-priority</strong> and{' '}
-                      <strong>{medCount} medium-priority</strong> issues.
+                      {result.issues.length === 0
+                        ? 'Great work — no issues found on this page!'
+                        : <>
+                            We found{' '}
+                            {highCount > 0 && <strong>{highCount} high-priority</strong>}
+                            {highCount > 0 && medCount > 0 && ' and '}
+                            {medCount > 0 && <strong>{medCount} medium-priority</strong>}
+                            {highCount === 0 && medCount === 0 && `${lowCount} low-priority`}
+                            {' '}issue{result.issues.length !== 1 ? 's' : ''} on{' '}
+                            <span className="font-mono text-sm break-all">{result.url}</span>.
+                          </>
+                      }
                     </p>
                     <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                       <span className="flex items-center gap-1.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-1">
@@ -313,7 +382,7 @@ export function OptimizerTool() {
                       </span>
                       <span className="flex items-center gap-1.5 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded px-3 py-1">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        {MOCK_ISSUES.length - highCount - medCount} Low
+                        {lowCount} Low
                       </span>
                     </div>
                   </div>
@@ -335,13 +404,19 @@ export function OptimizerTool() {
                         </div>
                       )}
                       {emailState === 'sent' && (
-                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3" data-testid="email-sent-confirmation">
+                        <div
+                          className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3"
+                          data-testid="email-sent-confirmation"
+                        >
                           <Mail className="h-4 w-4 shrink-0" />
                           Report sent to <strong>{email}</strong>. Check your inbox.
                         </div>
                       )}
                       {emailState === 'error' && (
-                        <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3" data-testid="email-error">
+                        <div
+                          className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3"
+                          data-testid="email-error"
+                        >
                           <AlertCircle className="h-4 w-4 shrink-0" />
                           {emailError}
                         </div>
@@ -352,30 +427,33 @@ export function OptimizerTool() {
               </div>
 
               {/* Issues list */}
-              <div className="space-y-3 mb-8">
-                {MOCK_ISSUES.map((issue, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: i * 0.05 }}
-                    className="bg-card border border-border rounded-xl p-5"
-                    data-testid={`issue-${i}`}
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <h4 className="font-semibold text-foreground text-sm">{issue.title}</h4>
-                      <SeverityBadge severity={issue.severity} />
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{issue.detail}</p>
-                  </motion.div>
-                ))}
-              </div>
+              {result.issues.length > 0 && (
+                <div className="space-y-3 mb-8">
+                  {result.issues.map((issue, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: i * 0.04 }}
+                      className="bg-card border border-border rounded-xl p-5"
+                      data-testid={`issue-${i}`}
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className="font-semibold text-foreground text-sm">{issue.title}</h4>
+                        <SeverityBadge severity={issue.severity} />
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{issue.detail}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
               {/* Upgrade CTA */}
               <div className="bg-[#1A3A7A] rounded-2xl p-8 text-white text-center">
-                <h3 className="text-xl font-bold mb-2">Want the full report + monthly re-scans?</h3>
+                <h3 className="text-xl font-bold mb-2">Want monthly re-scans + the full report?</h3>
                 <p className="text-blue-100 mb-6 text-sm">
-                  Upgrade to Optimizer for a complete site audit, exportable PDF, and monthly re-scans — so you can track progress over time.
+                  Upgrade to Optimizer for a complete site audit, exportable PDF, and monthly
+                  re-scans — so you can track progress over time.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
