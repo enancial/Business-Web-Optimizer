@@ -8,7 +8,7 @@ export function Footer() {
           <a
             href="#top"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-            aria-label="Business Web Dev — home"
+            aria-label="Business Web Optimizer — home"
           >
             <img
               src="/images/branding/icon-dark.png"
@@ -16,7 +16,7 @@ export function Footer() {
               aria-hidden="true"
               style={{ height: 40, width: 'auto' }}
             />
-            <span className="font-bold text-white text-lg">Business Web Dev</span>
+            <span className="font-bold text-white text-lg">Business Web Optimizer</span>
           </a>
         </div>
 
@@ -34,11 +34,11 @@ export function Footer() {
           {/* Contact */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <a
-              href="mailto:contact@businesswebdev.com"
+              href="mailto:contact@businessweboptimizer.com"
               className="text-sm text-white/80 hover:text-white transition-colors"
               data-testid="link-email"
             >
-              contact@businesswebdev.com
+              contact@businessweboptimizer.com
             </a>
             <span className="hidden sm:block text-white/30">·</span>
             <a
@@ -55,18 +55,25 @@ export function Footer() {
           {/* Links */}
           <div className="flex gap-6">
             <a
-              href="#launch-package"
+              href="#pricing"
               className="text-sm text-white/60 hover:text-white transition-colors"
-              data-testid="link-footer-launch-package"
+              data-testid="link-footer-pricing"
             >
-              Launch Package
+              Pricing
             </a>
             <a
-              href="#management-plan"
+              href="#optimizer-tool"
               className="text-sm text-white/60 hover:text-white transition-colors"
-              data-testid="link-footer-management-plan"
+              data-testid="link-footer-optimizer-tool"
             >
-              Management Plan
+              Run a Scan
+            </a>
+            <a
+              href="#faq"
+              className="text-sm text-white/60 hover:text-white transition-colors"
+              data-testid="link-footer-faq"
+            >
+              FAQ
             </a>
           </div>
         </div>

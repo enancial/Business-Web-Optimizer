@@ -3,35 +3,27 @@ import { Button } from '@/components/ui/button';
 
 const cards = [
   {
-    title: 'Need a new or overhauled site?',
+    title: 'Want to try it before committing?',
     description:
-      "You don't have a site, or your current one is weak, outdated, or not converting. You want a solid foundation that actually supports your business.",
-    cta: 'Start with the 30-Day Launch Package',
-    href: '#launch-package',
-    testId: 'card-new-site',
+      "Run a free scan on your homepage and see the top issues holding your site back. No credit card needed — just paste your URL and go.",
+    cta: 'Start Free Scan',
+    href: '#optimizer-tool',
+    testId: 'card-free-trial',
   },
   {
-    title: 'Already have a site, want someone to manage it?',
+    title: 'Ready to go deeper?',
     description:
-      "Your site is live, but you want a senior partner to handle improvements, SEO, and ongoing changes. You'd rather not juggle freelancers or agencies.",
-    cta: 'Start with the Website Management Plan',
-    href: '#management-plan',
-    testId: 'card-manage-site',
-  },
-  {
-    title: 'Want both foundation and ongoing management?',
-    description:
-      'You want the site built or overhauled correctly from the start, and you also want someone to keep it sharp and improving every month.',
-    cta: 'See both options',
-    href: '#how-they-work-together',
-    testId: 'card-both',
+      "Get a full-site scan, deeper checks, and an exportable PDF report. Choose Optimizer for monthly re-scans, or Optimizer Pro for scheduled scans, competitor comparisons, and API access.",
+    cta: 'See Optimizer Plans',
+    href: '#pricing',
+    testId: 'card-paid-plan',
   },
 ];
 
 export function WhichDoINeed() {
   return (
     <section className="py-20 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -40,10 +32,10 @@ export function WhichDoINeed() {
           className="text-3xl sm:text-4xl font-bold text-center mb-12"
           data-testid="text-which-do-i-need-headline"
         >
-          Which Do I Need?
+          Which Plan Do I Need?
         </motion.h2>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
           {cards.map((card, index) => (
             <motion.div
               key={card.testId}

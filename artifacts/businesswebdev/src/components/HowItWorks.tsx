@@ -3,23 +3,23 @@ import { motion } from 'framer-motion';
 const steps = [
   {
     number: '1',
-    title: 'Choose your package and pay online.',
-    description: 'No calls, no discovery meeting. Just read the offer, decide, and checkout.',
+    title: 'Enter your URL.',
+    description: 'Provide your website address and, optionally, your email for report delivery. No account needed.',
   },
   {
     number: '2',
-    title: 'Fill out a short onboarding form (no calls).',
-    description: 'Share your goals, site access, and assets. Everything I need in one place.',
+    title: 'Choose your plan.',
+    description: 'Start free for a quick look, or pick Optimizer or Optimizer Pro for a full audit and ongoing tracking.',
   },
   {
     number: '3',
-    title: 'I do the work and send clear video updates.',
-    description: 'All communication is async via email and short Loom videos.',
+    title: 'Get your optimization plan.',
+    description: 'Receive a prioritized list of fixes and recommendations — clarity, UX, conversions, and SEO all covered.',
   },
   {
     number: '4',
-    title: 'You get a launch-ready site or ongoing management, with minimal back-and-forth.',
-    description: 'Focused work, clear outcomes, no endless meetings.',
+    title: 'Track and improve over time.',
+    description: 'Paid plans include recurring scans so you can measure progress and stay ahead of issues as your site evolves.',
   },
 ];
 
@@ -41,7 +41,7 @@ export function HowItWorks() {
           </h2>
 
           <p className="text-lg text-muted-foreground mb-12 text-center max-w-3xl mx-auto leading-relaxed">
-            Designed to be fast, focused, and almost entirely contactless — whether you're a founder in Raleigh and the Triangle area or working with me fully remote from anywhere in the U.S. Whether you're starting with the 30-Day Launch Package or jumping straight into the Website Management Plan, the process is the same: choose your plan, pay online, fill out a short form, and I handle the rest.
+            Fully self-serve — no calls, no forms, no waiting. Founders in Raleigh, the Triangle area, and across the U.S. use Business Web Optimizer to spot and fix website issues fast.
           </p>
 
           <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
@@ -73,7 +73,7 @@ export function HowItWorks() {
           </div>
 
           <p className="text-sm text-muted-foreground text-center mt-12 italic">
-            Calls are not required. If you prefer, we can add a short intro call as an exception.
+            Do I need to talk to anyone to use this? No — Business Web Optimizer is fully self-serve.
           </p>
         </motion.div>
       </div>

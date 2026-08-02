@@ -1,71 +1,71 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Zap, BarChart2, FileText } from 'lucide-react';
 
 const bullets = [
-  'Launch-ready in 30 days — no dragged-out projects',
-  'Flat, transparent pricing — no hidden retainers',
-  'Fully async — minimal meetings, maximum focus',
+  { icon: Zap, text: 'Instant scan — results in under 60 seconds' },
+  { icon: BarChart2, text: 'Prioritized fixes, not a raw data dump' },
+  { icon: FileText, text: 'Exportable PDF report (paid plans)' },
 ];
 
 export function Hero() {
   return (
-    // mt-16 clears the 64px fixed nav (h-16)
     <section
       id="top"
       className="relative mt-16 overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #0f2557 0%, #1A3A7A 35%, #1565D6 70%, #3b82f6 100%)',
+        background: 'linear-gradient(150deg, #f0f4ff 0%, #e8effe 40%, #ddeaff 70%, #cfd9f7 100%)',
         minHeight: 'calc(100vh - 64px)',
       }}
     >
       {/* Subtle dot grid */}
       <div
-        className="absolute inset-0 opacity-[0.07]"
+        className="absolute inset-0 opacity-[0.06]"
         style={{
-          backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 0)',
+          backgroundImage: 'radial-gradient(circle, #1A3A7A 1px, transparent 0)',
           backgroundSize: '32px 32px',
         }}
       />
 
-      {/* Light glow at bottom */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-64 rounded-full bg-blue-400/20 blur-3xl" />
+      {/* Soft glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] rounded-full bg-blue-400/10 blur-3xl pointer-events-none" />
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-center text-white">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 text-center">
 
         {/* Label */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-sm font-medium text-white/90"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 rounded-full bg-[#1A3A7A]/10 border border-[#1A3A7A]/20 text-sm font-medium text-[#1A3A7A]"
         >
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
           </span>
-          Currently accepting new clients
+          Automated website optimization for founders
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6"
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6 text-[#0f2557]"
           data-testid="text-hero-headline"
         >
-          A professional website,{' '}
-          <span className="text-orange-400">launched in 30 days</span>
+          Paste your URL.{' '}
+          <span className="text-[#1565D6]">Get a prioritized<br className="hidden sm:block" /> optimization plan</span>{' '}
+          in minutes.
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-lg sm:text-xl text-white/75 max-w-2xl mx-auto mb-8"
+          className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10"
           data-testid="text-hero-subhead"
         >
-          Web design and ongoing management for founders who need results, not excuses. Based in Raleigh, NC — working with clients across the Triangle and remote founders nationwide. One flat price. No agencies. No mystery.
+          Automated scans that show you exactly what to fix on your site to improve clarity, UX, and conversions — built for founders and businesses across the U.S.
         </motion.p>
 
         {/* Bullet trust signals */}
@@ -73,12 +73,12 @@ export function Hero() {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row gap-3 justify-center mb-10 text-sm text-white/80"
+          className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
         >
-          {bullets.map((b) => (
-            <li key={b} className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
-              {b}
+          {bullets.map(({ icon: Icon, text }) => (
+            <li key={text} className="flex items-center gap-2 text-sm text-gray-600 bg-white/70 border border-gray-200 rounded-full px-4 py-2 shadow-sm">
+              <Icon className="h-4 w-4 text-[#1565D6] flex-shrink-0" />
+              {text}
             </li>
           ))}
         </motion.ul>
@@ -92,11 +92,11 @@ export function Hero() {
           <Button
             asChild
             size="lg"
-            className="bg-orange-500 hover:bg-orange-600 text-white text-base px-8 shadow-lg shadow-orange-900/30 gap-2"
-            data-testid="button-hero-launch-package"
+            className="bg-[#1565D6] hover:bg-[#1A3A7A] text-white text-base px-8 shadow-lg shadow-blue-900/20 gap-2"
+            data-testid="button-hero-try-free"
           >
-            <a href="#launch-package">
-              See the Launch Package
+            <a href="#optimizer-tool">
+              Try Free
               <ArrowRight className="h-4 w-4" />
             </a>
           </Button>
@@ -104,10 +104,10 @@ export function Hero() {
             asChild
             size="lg"
             variant="ghost"
-            className="text-white hover:bg-white/10 text-base px-8 border border-white/25"
-            data-testid="button-hero-management-plan"
+            className="text-[#1A3A7A] hover:bg-[#1A3A7A]/10 text-base px-8 border border-[#1A3A7A]/30"
+            data-testid="button-hero-see-pricing"
           >
-            <a href="#management-plan">Monthly Management Plan</a>
+            <a href="#pricing">See Pricing</a>
           </Button>
         </motion.div>
       </div>

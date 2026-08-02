@@ -11,22 +11,27 @@ export function Success() {
         <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-6" />
 
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-          Payment received!
+          You're subscribed!
         </h1>
 
         <p className="text-slate-300 leading-relaxed mb-4">
-          You're all set. Check your inbox for a payment confirmation, then I'll
-          reach out within <strong className="text-white">one business day</strong> with
-          your onboarding form and next steps.
+          Your payment was received and your subscription is now active. Check your inbox for a confirmation — your first scan report will be on its way shortly.
         </p>
 
         <p className="text-slate-400 text-sm mb-10">
-          Questions in the meantime?{' '}
+          Questions?{' '}
           <a
-            href="mailto:hello@businesswebdev.com"
+            href="mailto:contact@businessweboptimizer.com"
             className="text-indigo-400 hover:text-indigo-300 underline transition-colors"
           >
-            hello@businesswebdev.com
+            contact@businessweboptimizer.com
+          </a>
+          {' '}or call{' '}
+          <a
+            href="tel:+19844007773"
+            className="text-indigo-400 hover:text-indigo-300 underline transition-colors whitespace-nowrap"
+          >
+            (984) 400‑7773
           </a>
         </p>
 

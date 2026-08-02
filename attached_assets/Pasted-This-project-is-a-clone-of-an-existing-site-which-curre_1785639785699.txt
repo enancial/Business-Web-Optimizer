@@ -1,0 +1,233 @@
+This project is a clone of an existing site, which currently contains this content structure:
+
+Single-page layout with sections:
+
+Hero: “A professional website, launched in 30 days”
+
+“Which Do I Need?” chooser
+
+30-Day Launch Package (details + CTA)
+
+Website Management Plan (details + CTA)
+
+“How they work together” section
+
+“How it works” (4 steps)
+
+FAQ list
+
+Footer with brand + contact
+
+Navigation anchors:
+
+#top, #launch-package, #management-plan, #how-it-works, #faq
+
+All branding is “Business Web Dev”
+CTAs currently point to checkout flows for:
+
+30-Day Launch Package – $2,500
+
+Website Management Plan – $450/month
+
+Keep the overall visual design system and structure, but convert this project into Business Web Optimizer.
+
+Rename the brand inside this project
+Replace all occurrences of “Business Web Dev” with “Business Web Optimizer”:
+
+Site title and <head> metadata.
+
+Header logo text.
+
+Footer text.
+
+Any copy blocks that mention “Business Web Dev.”
+
+Use this tagline for this site:
+“Automated website optimization for founders.”
+
+Also update:
+
+Domain references to businessweboptimizer.com where relevant.
+
+Footer business name to:
+Business Web Development & Consulting (part of Business Web Group)
+Location: Raleigh, NC
+Phone: (984) 400‑7773
+
+Homepage hero (optimizer-focused)
+Update the existing hero section to focus on the Optimizer tool, not implementation:
+
+Headline:
+“Paste your URL. Get a prioritized optimization plan in minutes.”
+
+Subhead:
+“Automated scans that show you exactly what to fix on your site to improve clarity, UX, and conversions.”
+
+Primary CTA button: “Try Free”
+Secondary CTA button: “See Pricing”
+
+Use the current hero layout (same structure, spacing, buttons); only adjust copy and, if needed, make the hero background feel slightly lighter and more tool-like (more white space, less heavy solid blue).
+
+Replace implementation packages with Optimizer tiers
+Where this project currently shows “30-Day Launch Package” and “Website Management Plan”, change them to Optimizer pricing tiers:
+
+Card 1 – Free Trial
+
+Description: “1 scan, limited pages, top issues only.”
+
+Price: “$0”
+
+CTA: “Start Free Scan” → links to the Optimizer tool section.
+
+Card 2 – Optimizer
+
+Description: “Full site scan, deeper checks, exportable PDF report, monthly re‑scan.”
+
+Price: use a placeholder (e.g. “$29/mo” or whatever I set in Stripe).
+
+CTA: “Get Optimizer” → /checkout?product=optimizer.
+
+Card 3 – Optimizer Pro
+
+Description: “Everything in Optimizer, plus scheduled scans, competitor comparison, white‑label reports, API access.”
+
+Price: higher placeholder (e.g. “$79/mo”).
+
+CTA: “Get Optimizer Pro” → /checkout?product=optimizer-pro.
+
+Update all CTAs in these sections to use the new anchors/links.
+
+“Which Do I Need?” section
+Keep the layout of the “Which Do I Need?” chooser, but adapt the logic to Optimizer:
+
+One option for people who want to try it first → Free Trial.
+
+One option for people ready to go deeper → Optimizer / Optimizer Pro.
+
+Update the button targets to the corresponding sections/checkout links.
+
+Optimizer tool section
+Add or adapt a section to serve as the Optimizer tool:
+
+Headline: “Run Your Optimization Scan”
+
+Simple form:
+
+Field: Website URL.
+
+Optional: Email (for free tier gating / report delivery).
+
+“Run Scan” button.
+
+For now, mock the scan behavior:
+
+Show a loading state.
+
+Then show a sample “Optimization Report” with:
+
+Overall score (0–100).
+
+5–10 prioritized issues (title + 1–2 lines each).
+
+CTAs to upgrade to Optimizer or Optimizer Pro.
+
+Reuse existing layout patterns (cards, sections, spacing); just change headings, copy, and form fields.
+
+How It Works section
+Reuse the existing “How it works” 4-step layout, but change steps to describe the Optimizer workflow:
+
+Enter your URL
+Provide your website address and optional email.
+
+Choose your plan
+Free Trial, Optimizer, or Optimizer Pro.
+
+Get your optimization plan
+Receive a prioritized list of fixes and recommendations.
+
+Track and improve over time (for paid)
+Run recurring scans and measure progress.
+
+Remove any language about “pay online and I build the site for you in 30 days.”
+
+FAQ section
+Keep the FAQ structure, but update questions and answers to fit the Optimizer:
+
+Examples:
+
+“Who is Business Web Optimizer for?”
+
+“What does the Optimizer analyze?”
+
+“How long does a scan take?”
+
+“What’s included in Free vs Optimizer vs Pro?”
+
+“Can I cancel anytime?” (for subscriptions)
+
+“Do I need to talk to anyone to use this?” (answer: no, it’s fully self‑serve)
+
+“How do payments and billing work?”
+
+Remove or rewrite any questions that refer specifically to the Launch Package or Management Plan.
+
+Payment / Stripe
+Inside this cloned project:
+
+The Stripe integration (env vars, routes, Payment Element, success/cancel pages) is already implemented from Business Web Dev. Do not rewrite it.
+
+Add support for two new product keys:
+
+optimizer → maps to the Stripe Price ID for the Optimizer plan.
+
+optimizer-pro → maps to the Stripe Price ID for the Optimizer Pro plan.
+
+In the existing checkout logic:
+
+Ensure /checkout?product=optimizer and /checkout?product=optimizer-pro work exactly like the existing Dev products.
+
+Reuse the same success and cancel page behavior.
+
+In Stripe, I will create:
+
+A product/price for “Optimizer”.
+
+A product/price for “Optimizer Pro”.
+
+After setup, test:
+
+/checkout?product=optimizer → payment → success.
+
+/checkout?product=optimizer-pro → payment → success.
+
+Free Trial does not use Stripe; it just allows a limited scan.
+
+Copy & positioning
+
+Write concise, founder‑friendly copy:
+
+Focus on clarity, speed, and actionability.
+
+Avoid jargon; explain benefits in plain language.
+
+Naturally include:
+
+“Raleigh, NC” and “Triangle area” once or twice on Home/About/Contact.
+
+“Founders and businesses across the U.S.” or similar for national reach.
+
+Do not over‑stuff keywords.
+
+Guardrails
+
+Do not change the core layout system, color palette, or component library from Business Web Dev unless it clearly improves usability for this app.
+
+Do not add unnecessary pages; keep it tight: Home, Optimizer tool, Pricing, How It Works, FAQ, Contact (can be combined with footer).
+
+Focus on:
+
+Clean, credible SaaS‑style presentation.
+
+A smooth path from “Try Free” → “See value” → “Upgrade to Optimizer/Pro”.
+
+Apply all changes only within this project.

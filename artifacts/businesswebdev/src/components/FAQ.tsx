@@ -5,44 +5,42 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+
 const faqs = [
   {
-    question: 'Do I need to get on a call?',
+    question: 'Who is Business Web Optimizer for?',
     answer:
-      'No. Everything is handled asynchronously via a short onboarding form, email, and video updates. This keeps things fast and focused. Calls are not required.',
+      'Business Web Optimizer is built for founders and small business owners who want to know exactly what\'s holding their website back — without hiring an agency or waiting weeks for an audit. If you have a live site and want clear, actionable fixes, this is for you.',
   },
   {
-    question: 'What if I need more than the package includes?',
+    question: 'What does the Optimizer analyze?',
     answer:
-      'We can discuss a custom add-on or a future project after the initial work. The packages are designed to cover the most important foundational work without scope creep.',
+      'The scan checks for clarity and value proposition issues, missing or weak CTAs, page load speed, SEO fundamentals (meta tags, heading structure, sitemap), mobile usability, social proof gaps, Open Graph tags, form UX, and more. Paid plans cover 20+ checks across your full site.',
   },
   {
-    question: "What if I'm not satisfied with the 30-Day Launch Package?",
+    question: 'How long does a scan take?',
     answer:
-      "If you don't feel the work materially improved your launch readiness, I'll refund 50% of your investment. I want this to be obviously valuable for you.",
+      'Most scans complete in under 60 seconds. Larger sites with many pages may take slightly longer on paid plans.',
   },
   {
-    question:
-      'Can I start with the Website Management Plan without doing the 30-Day Launch Package?',
+    question: "What's included in Free vs Optimizer vs Optimizer Pro?",
     answer:
-      "Yes. If your site and messaging are already solid, the Website Management Plan works well on its own. If you're still shaping your offer or site, the 30-Day Launch Package is usually the better starting point.",
+      'Free Trial scans up to 5 pages and shows your top 3 issues — good for a quick gut-check. Optimizer runs a full site scan with 20+ checks, an exportable PDF report, and a monthly re-scan. Optimizer Pro adds scheduled auto-scans, competitor comparison, white-label PDF reports, and API access.',
   },
   {
-    question:
-      'I already have a website. Can the 30-Day Launch Package replace or overhaul it?',
+    question: 'Do I need to talk to anyone to use this?',
     answer:
-      'Yes. The 30-Day Launch Package is used both for brand-new sites and for replacing or substantially improving existing sites. If your current site is weak, outdated, or not converting, we can treat it as a full overhaul.',
+      'No. Business Web Optimizer is fully self-serve. Paste your URL, run the scan, and get your results instantly. No calls, no discovery meetings, no back-and-forth.',
   },
   {
-    question:
-      'If I start with the 30-Day Launch Package, can I add the Website Management Plan later?',
+    question: 'Can I cancel anytime?',
     answer:
-      'Yes. Many clients start with the 30-Day Launch Package and then add the Website Management Plan once the foundation is in place. You can also choose to start both at the same time if you want ongoing management from day one.',
+      'Yes. Paid plans (Optimizer and Optimizer Pro) are month-to-month subscriptions. You can cancel anytime — no lock-ins, no cancellation fees.',
   },
   {
-    question: 'How do payments work?',
+    question: 'How do payments and billing work?',
     answer:
-      "Payments are handled securely via Stripe. For the 30-Day Launch Package, you can pay in full or split 50/50 (upfront and on delivery). The Website Management Plan is billed monthly and can be canceled anytime with 30 days' notice.",
+      'Payments are handled securely via Stripe. Optimizer and Optimizer Pro are billed monthly. The Free Trial has no payment required. You\'ll be charged on the same date each month and can cancel anytime from your account.',
   },
 ];
 
@@ -84,8 +82,8 @@ export function FAQ() {
           {/* Contact line */}
           <p className="mt-10 text-center text-sm text-muted-foreground" data-testid="text-faq-contact">
             Still have questions?{' '}
-            <a href="mailto:contact@businesswebdev.com" className="text-[#1A3A7A] hover:underline font-medium">
-              contact@businesswebdev.com
+            <a href="mailto:contact@businessweboptimizer.com" className="text-[#1A3A7A] hover:underline font-medium">
+              contact@businessweboptimizer.com
             </a>
             {' '}or call{' '}
             <a href="tel:+19844007773" className="text-[#1A3A7A] hover:underline font-medium whitespace-nowrap" data-testid="link-phone-faq">

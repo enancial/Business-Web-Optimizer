@@ -6,10 +6,10 @@ export function Nav() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Launch Package',  href: '#launch-package' },
-    { label: 'Management Plan', href: '#management-plan' },
-    { label: 'How It Works',    href: '#how-it-works' },
-    { label: 'FAQ',             href: '#faq' },
+    { label: 'Pricing',     href: '#pricing' },
+    { label: 'Run a Scan',  href: '#optimizer-tool' },
+    { label: 'How It Works', href: '#how-it-works' },
+    { label: 'FAQ',          href: '#faq' },
   ];
 
   return (
@@ -22,7 +22,7 @@ export function Nav() {
             href="#top"
             className="flex items-center gap-3 flex-shrink-0 hover:opacity-80 transition-opacity"
             data-testid="link-logo"
-            aria-label="Business Web Dev — home"
+            aria-label="Business Web Optimizer — home"
           >
             <img
               src="/images/branding/icon.png"
@@ -31,7 +31,7 @@ export function Nav() {
               className="h-9 w-auto"
             />
             <span className="font-bold text-[#1A3A7A] leading-tight text-base sm:text-lg">
-              Business Web Dev
+              Business Web Optimizer
             </span>
           </a>
 
@@ -56,10 +56,10 @@ export function Nav() {
               className="text-sm text-gray-500 hover:text-[#1A3A7A] transition-colors whitespace-nowrap"
               data-testid="link-phone-header"
             >
-              Call: (984) 400‑7773
+              (984) 400‑7773
             </a>
-            <Button asChild size="sm" className="bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-desktop">
-              <a href="#launch-package">Work With Me</a>
+            <Button asChild size="sm" className="bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-try-free-desktop">
+              <a href="#optimizer-tool">Try Free</a>
             </Button>
           </div>
 
@@ -94,15 +94,15 @@ export function Nav() {
               </a>
             ))}
             <div className="pt-2 space-y-2">
-              <Button asChild className="w-full bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-work-with-me-mobile">
-                <a href="#launch-package" onClick={() => setIsOpen(false)}>Work With Me</a>
+              <Button asChild className="w-full bg-[#1A3A7A] hover:bg-[#1E45A0] text-white" data-testid="button-try-free-mobile">
+                <a href="#optimizer-tool" onClick={() => setIsOpen(false)}>Try Free</a>
               </Button>
               <a
                 href="tel:+19844007773"
                 className="flex justify-center text-sm text-gray-500 hover:text-[#1A3A7A] transition-colors py-1"
                 data-testid="link-phone-mobile"
               >
-                Call: (984) 400‑7773
+                (984) 400‑7773
               </a>
             </div>
           </div>

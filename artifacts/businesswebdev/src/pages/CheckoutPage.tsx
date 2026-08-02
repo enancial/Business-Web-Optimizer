@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 // Types
 // ---------------------------------------------------------------------------
 
-type Product = 'launch-package' | 'management-plan';
+type Product = 'optimizer' | 'optimizer-pro';
 
 interface ProductMeta {
   label: string;
@@ -26,20 +26,20 @@ interface ProductMeta {
 }
 
 const PRODUCT_META: Record<Product, ProductMeta> = {
-  'launch-package': {
-    label: '30-Day Launch Package',
-    price: '$2,500',
+  'optimizer': {
+    label: 'Optimizer',
+    price: '$29/month',
     description:
-      'A fixed-scope, 30-day project to build or substantially overhaul your site.',
-    unitAmount: 250000,
+      'Full site scan, deeper checks, exportable PDF report, and monthly re-scan.',
+    unitAmount: 2900,
     currency: 'usd',
   },
-  'management-plan': {
-    label: 'Website Management Plan',
-    price: '$450/month',
+  'optimizer-pro': {
+    label: 'Optimizer Pro',
+    price: '$79/month',
     description:
-      'Ongoing management, improvements, and SEO for your live site.',
-    unitAmount: 45000,
+      'Everything in Optimizer, plus scheduled scans, competitor comparison, white-label reports, and API access.',
+    unitAmount: 7900,
     currency: 'usd',
   },
 };
@@ -223,7 +223,7 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
         >
           {displayAmount === 0
             ? 'Claim free access'
-            : `Continue — ${formatAmount(displayAmount, displayCurrency)}`}
+            : `Continue — ${formatAmount(displayAmount, displayCurrency)}/mo`}
         </Button>
         <Button type="button" variant="outline" onClick={onBack} className="sm:w-auto">
           Cancel
@@ -289,7 +289,7 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
             </span>
           )}
           <span className="font-bold text-lg">
-            {formatAmount(intentResult.discountedAmount, intentResult.currency)}
+            {formatAmount(intentResult.discountedAmount, intentResult.currency)}/mo
           </span>
           {intentResult.discountLabel && (
             <span className="text-xs text-green-700 font-medium">
@@ -310,8 +310,7 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
 
       <p className="text-xs text-muted-foreground flex items-start gap-1.5">
         <LockKeyhole className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-        Payments are processed securely via Stripe. This is a streamlined,
-        self-serve checkout for founders who are ready to move quickly.
+        Payments are processed securely via Stripe. Cancel anytime.
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -320,7 +319,7 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
           disabled={!stripe || isProcessing}
           className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base"
         >
-          {isProcessing ? 'Processing…' : 'Pay now'}
+          {isProcessing ? 'Processing…' : 'Subscribe now'}
         </Button>
         <Button type="button" variant="outline" onClick={onBack} className="sm:w-auto">
           Back
@@ -343,7 +342,7 @@ export function CheckoutPage() {
   const productParam = params.get('product');
 
   const product: Product | null =
-    productParam === 'launch-package' || productParam === 'management-plan'
+    productParam === 'optimizer' || productParam === 'optimizer-pro'
       ? productParam
       : null;
 
@@ -438,7 +437,7 @@ export function CheckoutPage() {
               {meta.label}
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {step === 'free-success' ? 'You\'re all set!' : 'Complete your purchase'}
+              {step === 'free-success' ? 'You\'re all set!' : 'Complete your subscription'}
             </h1>
           </div>
 
@@ -466,12 +465,11 @@ export function CheckoutPage() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center space-y-2">
                 <CheckCircle2 className="h-10 w-10 text-green-600 mx-auto" />
                 <p className="font-semibold text-green-800">
-                  Your {meta.label} is confirmed at no charge.
+                  Your {meta.label} subscription is confirmed at no charge.
                 </p>
                 <p className="text-sm text-green-700">
                   A {intentResult.discountLabel} promo code was applied — your total is $0.
-                  {product === 'management-plan' &&
-                    " Your subscription is active and you'll be notified before any charges if the discount changes."}
+                  {" You'll be notified before any charges if the discount changes."}
                 </p>
               </div>
               <Button

@@ -9,10 +9,6 @@ const router: IRouter = Router();
 // ---------------------------------------------------------------------------
 
 /**
- * Looks up a promotion code string (e.g. "DEV1FREE") in Stripe and returns
- * the PromotionCode object if it is active, or null if not found / inactive.
- */
-/**
  * Look up an active promotion code via the Stripe REST API directly.
  *
  * The Stripe Node SDK v22 silently drops the nested `coupon` object from the
@@ -64,6 +60,18 @@ function discountLabel(coupon: Stripe.Coupon): string {
   return 'discount applied';
 }
 
+// Valid product keys
+type Product = 'optimizer' | 'optimizer-pro';
+
+function isValidProduct(p: unknown): p is Product {
+  return p === 'optimizer' || p === 'optimizer-pro';
+}
+
+function getPriceId(product: Product): string {
+  if (product === 'optimizer') return process.env.OPTIMIZER_PRICE_ID ?? '';
+  return process.env.OPTIMIZER_PRO_PRICE_ID ?? '';
+}
+
 // ---------------------------------------------------------------------------
 // GET /api/checkout-config
 // ---------------------------------------------------------------------------
@@ -83,7 +91,7 @@ router.get('/checkout-config', async (_req, res): Promise<void> => {
 /**
  * Validates a promotion code for a given product and returns pricing details.
  *
- * Body:  { code: string, product: 'launch-package' | 'management-plan' }
+ * Body:  { code: string, product: 'optimizer' | 'optimizer-pro' }
  * Returns: {
  *   valid: boolean,
  *   promotionCodeId?: string,
@@ -102,7 +110,7 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
     res.status(400).json({ valid: false, error: 'Promo code is required.' });
     return;
   }
-  if (product !== 'launch-package' && product !== 'management-plan') {
+  if (!isValidProduct(product)) {
     res.status(400).json({ valid: false, error: 'Invalid product.' });
     return;
   }
@@ -117,10 +125,7 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
     return;
   }
 
-  const priceId =
-    product === 'launch-package'
-      ? (process.env.LAUNCH_PACKAGE_PRICE_ID ?? '')
-      : (process.env.MANAGEMENT_PLAN_PRICE_ID ?? '');
+  const priceId = getPriceId(product);
 
   if (!priceId) {
     res.status(500).json({ valid: false, error: 'Product not configured.' });
@@ -156,14 +161,14 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
 /**
  * Creates the appropriate Stripe payment object and returns a clientSecret.
  *
- * - launch-package  → PaymentIntent at (possibly discounted) price
- * - management-plan → PaymentIntent with setup_future_usage (webhook creates subscription)
+ * - optimizer     → PaymentIntent with setup_future_usage (webhook creates subscription)
+ * - optimizer-pro → PaymentIntent with setup_future_usage (webhook creates subscription)
  *
  * If a valid promotionCode is supplied and reduces the amount to $0, this
  * endpoint handles the order directly (no PaymentIntent is needed for $0) and
  * returns { isFree: true } so the frontend can skip card entry.
  *
- * Body:  { product: 'launch-package' | 'management-plan', promotionCode?: string }
+ * Body:  { product: 'optimizer' | 'optimizer-pro', promotionCode?: string }
  * Returns: { clientSecret?: string, publishableKey: string, isFree?: boolean,
  *            originalAmount?: number, discountedAmount?: number, currency?: string,
  *            discountLabel?: string }
@@ -174,9 +179,9 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
     promotionCode?: unknown;
   };
 
-  if (product !== 'launch-package' && product !== 'management-plan') {
+  if (!isValidProduct(product)) {
     res.status(400).json({
-      error: "Invalid product. Must be 'launch-package' or 'management-plan'.",
+      error: "Invalid product. Must be 'optimizer' or 'optimizer-pro'.",
     });
     return;
   }
@@ -184,10 +189,7 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
   const stripe = await getUncachableStripeClient();
   const publishableKey = await getStripePublishableKey();
 
-  const priceId =
-    product === 'launch-package'
-      ? (process.env.LAUNCH_PACKAGE_PRICE_ID ?? '')
-      : (process.env.MANAGEMENT_PLAN_PRICE_ID ?? '');
+  const priceId = getPriceId(product);
 
   if (!priceId) {
     req.log.error(`Price ID env var not set for product: ${product}`);
@@ -225,23 +227,20 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
   };
 
   // ── Free order ($0 after discount) ────────────────────────────────────────
-  // Stripe does not accept PaymentIntents with amount = 0. Handle these cases
-  // directly: for management-plan create a free subscription; for launch-package
-  // there is nothing to charge.
+  // Stripe does not accept PaymentIntents with amount = 0. Create a free
+  // subscription with the promotion code applied.
   if (discountedAmount === 0) {
-    if (product === 'management-plan' && promoCode) {
-      // Create a free subscription with the promotion code applied.
-      // $0 invoices are auto-paid by Stripe without a payment method.
+    if (promoCode) {
       const customer = await stripe.customers.create();
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{ price: priceId }],
         discounts: [{ promotion_code: promoCode.id }],
-        metadata: { source: 'free_promo_checkout' },
+        metadata: { source: 'free_promo_checkout', product },
       });
       req.log.info(
-        { subscriptionId: subscription.id, promoCodeId: promoCode.id },
-        'Free management-plan subscription created via promo code',
+        { subscriptionId: subscription.id, promoCodeId: promoCode.id, product },
+        'Free subscription created via promo code',
       );
     }
 
@@ -249,47 +248,26 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
     return;
   }
 
-  // ── Paid order — create PaymentIntent ────────────────────────────────────
-  let clientSecret: string;
+  // ── Paid subscription — collect payment + save card for recurring charges ──
+  const customer = await stripe.customers.create();
 
-  if (product === 'launch-package') {
-    const intent = await stripe.paymentIntents.create({
-      amount: discountedAmount,
-      currency: price.currency,
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        product: 'launch-package',
-        price_id: priceId,
-        ...(promoCode
-          ? { promotion_code_id: promoCode.id, promotion_code: promoCode.code }
-          : {}),
-      },
-    });
-    clientSecret = intent.client_secret!;
-  } else {
-    // management-plan: collect payment + save card for recurring charges.
-    // A payment_intent.succeeded webhook will create the subscription.
-    const customer = await stripe.customers.create();
+  const intent = await stripe.paymentIntents.create({
+    amount: discountedAmount,
+    currency: price.currency,
+    customer: customer.id,
+    setup_future_usage: 'off_session',
+    automatic_payment_methods: { enabled: true },
+    metadata: {
+      product,
+      price_id: priceId,
+      action: 'create_subscription',
+      ...(promoCode
+        ? { promotion_code_id: promoCode.id, promotion_code: promoCode.code }
+        : {}),
+    },
+  });
 
-    const intent = await stripe.paymentIntents.create({
-      amount: discountedAmount,
-      currency: price.currency,
-      customer: customer.id,
-      setup_future_usage: 'off_session',
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        product: 'management-plan',
-        price_id: priceId,
-        action: 'create_subscription',
-        ...(promoCode
-          ? { promotion_code_id: promoCode.id, promotion_code: promoCode.code }
-          : {}),
-      },
-    });
-    clientSecret = intent.client_secret!;
-  }
-
-  res.json({ ...responseBase, clientSecret });
+  res.json({ ...responseBase, clientSecret: intent.client_secret });
 });
 
 export default router;

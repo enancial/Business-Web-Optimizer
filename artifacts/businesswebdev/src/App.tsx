@@ -5,9 +5,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Nav } from '@/components/Nav';
 import { Hero } from '@/components/Hero';
 import { WhichDoINeed } from '@/components/WhichDoINeed';
-import { LaunchPackage } from '@/components/LaunchPackage';
-import { ManagementPlan } from '@/components/ManagementPlan';
-import { HowTheyWorkTogether } from '@/components/HowTheyWorkTogether';
+import { PricingTiers } from '@/components/PricingTiers';
+import { OptimizerTool } from '@/components/OptimizerTool';
 import { HowItWorks } from '@/components/HowItWorks';
 import { FAQ } from '@/components/FAQ';
 import { Footer } from '@/components/Footer';
@@ -18,19 +17,13 @@ import { CheckoutPage } from '@/pages/CheckoutPage';
 const queryClient = new QueryClient();
 
 function HomePage() {
-  const [, navigate] = useLocation();
   return (
     <div className="min-h-screen">
       <Nav />
       <Hero />
       <WhichDoINeed />
-      <LaunchPackage
-        onCheckout={() => navigate('/checkout?product=launch-package')}
-      />
-      <ManagementPlan
-        onCheckout={() => navigate('/checkout?product=management-plan')}
-      />
-      <HowTheyWorkTogether />
+      <PricingTiers />
+      <OptimizerTool />
       <HowItWorks />
       <FAQ />
       <Footer />
