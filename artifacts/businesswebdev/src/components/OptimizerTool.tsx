@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, AlertCircle, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { ArrowRight, AlertCircle, CheckCircle2, AlertTriangle, Loader2, Mail } from 'lucide-react';
 
 interface Issue {
   severity: 'high' | 'medium' | 'low';
@@ -55,6 +55,8 @@ const MOCK_ISSUES: Issue[] = [
 
 const SCORE = 42;
 
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 function SeverityBadge({ severity }: { severity: Issue['severity'] }) {
   const styles = {
     high: 'bg-red-100 text-red-700 border-red-200',
@@ -100,18 +102,23 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 type ScanState = 'idle' | 'scanning' | 'results';
+type EmailState = 'idle' | 'sending' | 'sent' | 'error';
 
 export function OptimizerTool() {
   const [url, setUrl] = useState('');
   const [email, setEmail] = useState('');
   const [state, setState] = useState<ScanState>('idle');
   const [progress, setProgress] = useState(0);
+  const [emailState, setEmailState] = useState<EmailState>('idle');
+  const [emailError, setEmailError] = useState('');
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
     setState('scanning');
     setProgress(0);
+    setEmailState('idle');
+    setEmailError('');
 
     // Simulate progressive scan
     const steps = [15, 35, 55, 72, 88, 100];
@@ -122,6 +129,37 @@ export function OptimizerTool() {
 
     await new Promise((r) => setTimeout(r, 300));
     setState('results');
+
+    // Fire email report if address was provided
+    if (email.trim()) {
+      void sendReport(email.trim(), url.trim());
+    }
+  }
+
+  async function sendReport(toEmail: string, scannedUrl: string) {
+    setEmailState('sending');
+    try {
+      const res = await fetch(`${BASE}/api/send-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: toEmail,
+          url: scannedUrl,
+          score: SCORE,
+          issues: MOCK_ISSUES,
+        }),
+      });
+      const data = (await res.json()) as { sent?: boolean; error?: string };
+      if (res.ok && data.sent) {
+        setEmailState('sent');
+      } else {
+        setEmailState('error');
+        setEmailError(data.error ?? 'Could not send email. Please try again.');
+      }
+    } catch {
+      setEmailState('error');
+      setEmailError('Network error — could not send email.');
+    }
   }
 
   function handleReset() {
@@ -129,6 +167,8 @@ export function OptimizerTool() {
     setProgress(0);
     setUrl('');
     setEmail('');
+    setEmailState('idle');
+    setEmailError('');
   }
 
   const highCount = MOCK_ISSUES.filter((i) => i.severity === 'high').length;
@@ -278,6 +318,37 @@ export function OptimizerTool() {
                     </div>
                   </div>
                 </div>
+
+                {/* Email delivery status */}
+                <AnimatePresence>
+                  {email && emailState !== 'idle' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {emailState === 'sending' && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/40 rounded-lg px-4 py-3">
+                          <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                          Sending report to <strong>{email}</strong>…
+                        </div>
+                      )}
+                      {emailState === 'sent' && (
+                        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3" data-testid="email-sent-confirmation">
+                          <Mail className="h-4 w-4 shrink-0" />
+                          Report sent to <strong>{email}</strong>. Check your inbox.
+                        </div>
+                      )}
+                      {emailState === 'error' && (
+                        <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3" data-testid="email-error">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          {emailError}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Issues list */}
