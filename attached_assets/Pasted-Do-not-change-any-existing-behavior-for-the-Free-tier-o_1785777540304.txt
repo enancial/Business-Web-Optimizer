@@ -1,0 +1,73 @@
+Do not change any existing behavior for the Free tier or for current paying subscribers. Only add the 7‑day trial for new Optimizer/Optimizer Pro signups.
+
+Add a 7‑day free trial (with credit card) to our existing Optimizer and Optimizer Pro subscriptions in Stripe, while keeping the current Free tier unchanged. You have full access to configure Stripe, the codebase, environment variables, and the database.
+
+Goals:
+- Free tier remains: scan up to 5 pages, show top 3 issues, no credit card required.
+- Optimizer ($29/mo) and Optimizer Pro ($79/mo) get a 7‑day free trial with card:
+  - Users get full access to all paid features during the 7 days.
+  - No charge on day 0.
+  - Automatic conversion to paid at the end of day 7 unless canceled.
+- Affiliates can promote: “Start a 7‑day free trial. No charge today. Cancel anytime before day 7.”
+- Existing subscription logic, webhooks, and affiliate tracking continue to work correctly.
+
+Stripe configuration:
+- Use our existing Stripe account, products, and prices for Optimizer and Optimizer Pro.
+- Implement the 7‑day trial in the simplest robust way:
+  - Either set a 7‑day trial on the existing Price objects in Stripe, or
+  - Set `trial_end = now + 7 days` when creating subscriptions (choose the simpler approach given our current code).
+- Ensure payment details are collected at signup (Payment Element / Checkout already does this).
+- Do not create new products or prices unless absolutely necessary; if you do, clearly document why and update any references in code.
+
+Backend changes:
+- Ensure that when a subscription is created for Optimizer or Optimizer Pro, the user gets a 7‑day trial:
+  - If using Price‑level trial: no change needed in subscription creation beyond what we already do.
+  - If using `trial_end`: set it correctly based on current time + 7 days.
+- Ensure our auth/entitlement logic treats trial subscriptions as “paid” for feature access:
+  - Users with `status = trialing` or `active` should have full access to paid features.
+- Confirm that existing webhooks still work:
+  - `payment_intent.succeeded` (affiliate conversion)  
+  - `invoice.paid` (affiliate earnings)  
+  - `customer.subscription.*` events  
+  The first paid invoice will occur after the 7‑day trial; ensure affiliate logic still attributes correctly (conversion at first successful payment intent, earnings on paid invoices during/after trial as designed).
+
+Frontend / UX changes:
+- Update the pricing page to clearly show three tiers: Free, Optimizer, Optimizer Pro.
+- For Optimizer and Optimizer Pro, add trial copy:
+  - “Start your 7‑day free trial. No charge today. Cancel anytime before day 7.”
+- Ensure the Free tier clearly states:
+  - “Scan up to 5 pages, see your top 3 issues. No credit card required.”
+- Update checkout/CTA buttons for Optimizer and Optimizer Pro to reflect the trial (e.g., “Start 7‑day free trial” instead of “Subscribe now” if that better matches the flow).
+- Keep the overall design consistent with the current site.
+
+Affiliate program:
+- No changes needed to the affiliate logic itself, but confirm that:
+  - Affiliates still get credited when a user starts a trial that later converts to paid.
+  - Earnings accrue only on paid invoices (after trial), as currently implemented.
+- If any small adjustment is needed to align affiliate attribution with the trial flow, implement it and document it.
+
+Testing & validation:
+- In a dev/test environment:
+  - Create a test user who starts an Optimizer trial.
+  - Confirm they get full paid features during the 7 days.
+  - Confirm no charge occurs until after day 7.
+  - Confirm that webhooks fire as expected and affiliate conversion/earnings are recorded correctly.
+- Ensure all existing tests still pass.
+
+Documentation:
+- In replit.md (or a new AFFILIATES_AND_TRIAL.md):
+  - Document how the 7‑day trial is configured in Stripe.
+  - Document the Free vs Optimizer vs Optimizer Pro feature differences.
+  - Document how trial users are treated in the code (feature flags / entitlements).
+  - Note any new env vars or Stripe settings that were changed.
+
+When you’re done, provide:
+- A brief summary of:
+  - What you changed in Stripe (Price trial vs `trial_end`, any dashboard steps).
+  - What code files you modified or added.
+- Confirmation that:
+  - Free tier still works as before (5 pages, top 3 issues, no card).
+  - Optimizer and Optimizer Pro now have a 7‑day trial with card, full features during trial.
+  - Existing webhooks and affiliate tracking still work correctly.
+- Any manual steps I need to perform in the Stripe Dashboard (if any).
+```
