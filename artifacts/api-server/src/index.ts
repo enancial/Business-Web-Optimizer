@@ -2,6 +2,7 @@ import { runMigrations } from "stripe-replit-sync";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { getStripeSync } from "./stripeClient";
+import { sendPendingTrialReminders } from "./lib/trialReminder";
 
 const rawPort = process.env["PORT"];
 
@@ -59,6 +60,31 @@ async function initStripe() {
     .catch((err) => logger.error({ err }, "Stripe backfill error"));
 }
 
+// ---------------------------------------------------------------------------
+// Trial reminder scheduler — runs every hour, sends "trial ends tomorrow" emails
+// ---------------------------------------------------------------------------
+
+const TRIAL_REMINDER_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+
+function startTrialReminderScheduler() {
+  // Run once shortly after startup, then every hour
+  const runJob = () => {
+    sendPendingTrialReminders(logger).catch((err) =>
+      logger.error({ err }, "Trial reminder job failed"),
+    );
+  };
+
+  // Small initial delay so startup noise settles before the first run
+  setTimeout(() => {
+    runJob();
+    setInterval(runJob, TRIAL_REMINDER_INTERVAL_MS);
+  }, 30_000);
+
+  logger.info("Trial reminder scheduler started (interval: 1 hour)");
+}
+
 initStripe().catch((err) => {
   logger.error({ err }, "Stripe initialization failed — checkout will be unavailable until restart");
 });
+
+startTrialReminderScheduler();

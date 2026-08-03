@@ -14,6 +14,68 @@ import { db, affiliates, affiliateConversions, affiliateEarnings } from '@worksp
 import { eq, and } from 'drizzle-orm';
 
 // ---------------------------------------------------------------------------
+// Shared email helper (SMTP2Go)
+// ---------------------------------------------------------------------------
+
+/**
+ * Sends a transactional email via SMTP2Go.
+ * Returns true on success, false on failure (non-throwing — callers log).
+ */
+export async function sendTransactionalEmail({
+  to,
+  subject,
+  html,
+  log,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  log: Logger;
+}): Promise<boolean> {
+  const apiKey = process.env.SMTP2GO_API_KEY;
+  if (!apiKey) {
+    log.error('SMTP2GO_API_KEY is not set — cannot send transactional email');
+    return false;
+  }
+
+  const sender =
+    process.env.SMTP2GO_SENDER_EMAIL ?? 'report@businessweboptimizer.com';
+
+  let smtpRes: Response;
+  try {
+    smtpRes = await fetch('https://api.smtp2go.com/v3/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: apiKey,
+        to: [to],
+        sender,
+        subject,
+        html_body: html,
+      }),
+    });
+  } catch (err) {
+    log.error({ err, to, subject }, 'Failed to reach SMTP2Go API');
+    return false;
+  }
+
+  const data = (await smtpRes.json()) as {
+    data?: { succeeded?: number; failures?: string[] };
+    error?: string;
+  };
+
+  if (!smtpRes.ok || (data.data?.succeeded ?? 0) < 1) {
+    log.error(
+      { status: smtpRes.status, data, to, subject },
+      'SMTP2Go send failed',
+    );
+    return false;
+  }
+
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // Main dispatcher — call this after stripeSync.processWebhook() returns
 // ---------------------------------------------------------------------------
 
@@ -316,6 +378,110 @@ async function onSubscriptionCreated(
   );
 
   await recordAffiliateConversion(affiliateCode, customerId, subscription.id, product, log);
+}
+
+export function buildTrialReminderEmail({
+  planName,
+  amountFormatted,
+  dateFormatted,
+  accountUrl,
+}: {
+  planName: string;
+  amountFormatted: string;
+  dateFormatted: string;
+  accountUrl: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your free trial ends soon</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f3f4f6; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: #1a3a7a; border-radius: 12px 12px 0 0; padding: 32px 32px 28px;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #93c5fd; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600;">Business Web Optimizer</p>
+              <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.2;">Your free trial ends tomorrow</h1>
+              <p style="margin: 0; font-size: 14px; color: #bfdbfe;">Here's what you need to know before ${dateFormatted}.</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background: #ffffff; padding: 32px 32px 24px;">
+              <p style="margin: 0 0 16px; font-size: 15px; color: #374151; line-height: 1.6;">
+                Your 7-day free trial of <strong>${planName}</strong> is ending on <strong>${dateFormatted}</strong>.
+                Unless you cancel before then, your card will be charged <strong>${amountFormatted}</strong> and your subscription will continue automatically.
+              </p>
+              <p style="margin: 0 0 24px; font-size: 15px; color: #374151; line-height: 1.6;">
+                <strong>Want to keep your access?</strong> No action needed — we'll take care of the rest.
+              </p>
+              <p style="margin: 0 0 24px; font-size: 15px; color: #374151; line-height: 1.6;">
+                <strong>Want to cancel?</strong> Visit your account page before ${dateFormatted} and click <em>Cancel trial</em>. You won't be charged.
+              </p>
+
+              <!-- CTA -->
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="border-radius: 8px; background: #1a3a7a;">
+                    <a href="${accountUrl}" style="
+                      display: inline-block;
+                      padding: 14px 32px;
+                      font-size: 15px;
+                      font-weight: 700;
+                      color: #ffffff;
+                      text-decoration: none;
+                      border-radius: 8px;
+                    ">Manage my account →</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider + details -->
+          <tr>
+            <td style="background: #ffffff; padding: 0 32px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 4px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 6px; font-size: 13px; color: #6b7280;">Plan</p>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #111827;">${planName} — ${amountFormatted}</p>
+                  </td>
+                  <td align="right" valign="top">
+                    <p style="margin: 0 0 6px; font-size: 13px; color: #6b7280;">Trial ends</p>
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #111827;">${dateFormatted}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background: #f9fafb; border-radius: 0 0 12px 12px; padding: 20px 32px; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                Questions? Reply to this email or call
+                <a href="tel:+19844007773" style="color: #6b7280;">(984) 400‑7773</a>.
+                You're receiving this because you started a free trial at
+                <a href="https://businessweboptimizer.com" style="color: #6b7280;">businessweboptimizer.com</a>.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
 
 // ---------------------------------------------------------------------------

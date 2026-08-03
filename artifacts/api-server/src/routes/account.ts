@@ -161,6 +161,7 @@ router.get('/account', async (req, res): Promise<void> => {
         plan,
         planLabel: OPTIMIZER_PLAN_LABELS[plan] ?? plan,
         currentPeriodEnd: activeSub.current_period_end,
+        trialEnd: activeSub.trial_end ?? null,
         amount: activeSub.items.data[0]?.price.unit_amount ?? 0,
         currency: activeSub.items.data[0]?.price.currency ?? 'usd',
         cancelAtPeriodEnd: activeSub.cancel_at_period_end,

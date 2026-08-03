@@ -45,6 +45,7 @@ interface AccountData {
     plan: 'optimizer' | 'optimizer-pro';
     planLabel: string;
     currentPeriodEnd: number;
+    trialEnd: number | null;
     amount: number;
     currency: string;
     cancelAtPeriodEnd: boolean;
@@ -471,15 +472,17 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
               {subscription ? (
                 <>
                   <h2 className="text-xl font-bold text-gray-900">{subscription.planLabel}</h2>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
                       className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_STYLES[subscription.status] ?? STATUS_STYLES['active']}`}
                     >
-                      {subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                      {subscription.status === 'trialing' ? 'Free trial' : subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
                     </span>
                     {subscription.cancelAtPeriodEnd && (
                       <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full font-medium">
-                        Cancels {fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}
+                        {subscription.status === 'trialing'
+                          ? `Trial canceled — access until ${fmtDate(subscription.trialEnd ?? subscription.cancelAt ?? subscription.currentPeriodEnd)}`
+                          : `Cancels ${fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}`}
                       </span>
                     )}
                   </div>
@@ -500,12 +503,31 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
 
           {subscription && (
             <div className="mt-5 pt-5 border-t border-gray-100 flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
-                {subscription.cancelAtPeriodEnd
-                  ? `Access ends ${fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}`
-                  : `Next billing date: ${fmtDate(subscription.currentPeriodEnd)}`}
-              </div>
+              {subscription.status === 'trialing' && subscription.trialEnd ? (
+                <>
+                  {/* Trial countdown */}
+                  {(() => {
+                    const daysLeft = Math.ceil(((subscription.trialEnd * 1000) - Date.now()) / 86_400_000);
+                    return (
+                      <div className="flex items-center gap-2 text-sm font-medium text-blue-700">
+                        <Calendar className="h-4 w-4 shrink-0 text-blue-500" />
+                        {subscription.cancelAtPeriodEnd
+                          ? `Trial ends ${fmtDate(subscription.trialEnd)} — no charge`
+                          : daysLeft <= 1
+                            ? `Trial ends today — you'll be charged ${fmt(subscription.amount, subscription.currency)}/mo tomorrow`
+                            : `${daysLeft} day${daysLeft !== 1 ? 's' : ''} left in your free trial — first charge on ${fmtDate(subscription.trialEnd)}`}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+                  {subscription.cancelAtPeriodEnd
+                    ? `Access ends ${fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}`
+                    : `Next billing date: ${fmtDate(subscription.currentPeriodEnd)}`}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -726,56 +748,123 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
         {/* Cancel / Uncancel */}
         {subscription && (
           <div className="bg-white border border-red-100 rounded-2xl p-6 shadow-sm">
-            <p className="font-semibold text-gray-900 mb-1">
-              {subscription.cancelAtPeriodEnd ? 'Keep your subscription' : 'Cancel subscription'}
-            </p>
-            {subscription.cancelAtPeriodEnd ? (
-              <>
-                <p className="text-sm text-gray-500 mb-4">
-                  Your subscription is scheduled to cancel on {fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}. You can keep access by resuming now.
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => uncancelMutation.mutate()}
-                  disabled={uncancelMutation.isPending}
-                >
-                  {uncancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resume subscription'}
-                </Button>
-              </>
-            ) : cancelConfirm ? (
-              <>
-                <p className="text-sm text-red-600 mb-4">
-                  Your access will continue until {fmtDate(subscription.currentPeriodEnd)}, then end. This cannot be undone without resubscribing.
-                </p>
-                <div className="flex gap-3">
+            {subscription.status === 'trialing' ? (
+              /* ── Trial cancel section ─────────────────────────────────── */
+              subscription.cancelAtPeriodEnd ? (
+                <>
+                  <p className="font-semibold text-gray-900 mb-1">Keep your trial</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Your trial is set to end early on{' '}
+                    {fmtDate(subscription.trialEnd ?? subscription.cancelAt ?? subscription.currentPeriodEnd)}.
+                    You won't be charged. Resume to keep access and be billed at the end of your trial.
+                  </p>
                   <Button
-                    variant="destructive"
-                    onClick={() => cancelMutation.mutate()}
-                    disabled={cancelMutation.isPending}
+                    variant="outline"
+                    onClick={() => uncancelMutation.mutate()}
+                    disabled={uncancelMutation.isPending}
                   >
-                    {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Yes, cancel my plan'}
+                    {uncancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Keep my trial'}
                   </Button>
-                  <Button variant="outline" onClick={() => setCancelConfirm(false)}>
-                    Never mind
+                </>
+              ) : cancelConfirm ? (
+                <>
+                  <p className="font-semibold text-gray-900 mb-1">Cancel your free trial?</p>
+                  <div className="flex items-start gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-blue-500" />
+                    <span>
+                      <strong>You won't be charged.</strong> You'll keep full access until{' '}
+                      {fmtDate(subscription.trialEnd ?? subscription.currentPeriodEnd)}, then your trial ends with no payment taken.
+                    </span>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="destructive"
+                      onClick={() => cancelMutation.mutate()}
+                      disabled={cancelMutation.isPending}
+                    >
+                      {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Yes, cancel trial'}
+                    </Button>
+                    <Button variant="outline" onClick={() => setCancelConfirm(false)}>
+                      Never mind
+                    </Button>
+                  </div>
+                  {cancelMutation.isError && (
+                    <p className="mt-2 text-sm text-red-600">{(cancelMutation.error as Error).message}</p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold text-gray-900 mb-1">Cancel trial</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Cancel before {fmtDate(subscription.trialEnd ?? subscription.currentPeriodEnd)} and you won't be charged a thing.
+                    You keep full access until your trial ends.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => setCancelConfirm(true)}
+                    data-testid="button-cancel-trial"
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-1.5" />
+                    Cancel trial
                   </Button>
-                </div>
-                {cancelMutation.isError && (
-                  <p className="mt-2 text-sm text-red-600">{(cancelMutation.error as Error).message}</p>
-                )}
-              </>
+                </>
+              )
             ) : (
+              /* ── Regular subscription cancel section ──────────────────── */
               <>
-                <p className="text-sm text-gray-500 mb-4">
-                  Cancels at end of current billing period. You keep access until then.
+                <p className="font-semibold text-gray-900 mb-1">
+                  {subscription.cancelAtPeriodEnd ? 'Keep your subscription' : 'Cancel subscription'}
                 </p>
-                <Button
-                  variant="outline"
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={() => setCancelConfirm(true)}
-                >
-                  <AlertTriangle className="h-4 w-4 mr-1.5" />
-                  Cancel subscription
-                </Button>
+                {subscription.cancelAtPeriodEnd ? (
+                  <>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Your subscription is scheduled to cancel on {fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}. You can keep access by resuming now.
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={() => uncancelMutation.mutate()}
+                      disabled={uncancelMutation.isPending}
+                    >
+                      {uncancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resume subscription'}
+                    </Button>
+                  </>
+                ) : cancelConfirm ? (
+                  <>
+                    <p className="text-sm text-red-600 mb-4">
+                      Your access will continue until {fmtDate(subscription.currentPeriodEnd)}, then end. This cannot be undone without resubscribing.
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="destructive"
+                        onClick={() => cancelMutation.mutate()}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Yes, cancel my plan'}
+                      </Button>
+                      <Button variant="outline" onClick={() => setCancelConfirm(false)}>
+                        Never mind
+                      </Button>
+                    </div>
+                    {cancelMutation.isError && (
+                      <p className="mt-2 text-sm text-red-600">{(cancelMutation.error as Error).message}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Cancels at end of current billing period. You keep access until then.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                      onClick={() => setCancelConfirm(true)}
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-1.5" />
+                      Cancel subscription
+                    </Button>
+                  </>
+                )}
               </>
             )}
           </div>
