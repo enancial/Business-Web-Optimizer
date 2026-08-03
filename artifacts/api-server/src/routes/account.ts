@@ -61,28 +61,36 @@ router.post('/account/auth', async (req, res): Promise<void> => {
   }
 
   if (!customers.data.length) {
-    res.status(404).json({ error: 'No account found for that email address.' });
+    res.status(404).json({
+      error: 'No account found for that email address. Please check for typos and try again.',
+      errorCode: 'not_found',
+    });
     return;
   }
 
   const optimizerPriceId = process.env.OPTIMIZER_PRICE_ID ?? '';
   const optimizerProPriceId = process.env.OPTIMIZER_PRO_PRICE_ID ?? '';
 
-  // Find the first customer with an active optimizer subscription
+  // Find the first customer with an active optimizer subscription.
+  // Also track whether any customer had an optimizer sub that is now inactive.
+  let foundInactiveOptimizerSub = false;
+
   for (const customer of customers.data) {
     const subs = await stripe.subscriptions.list({
       customer: customer.id,
-      limit: 5,
+      status: 'all',
+      limit: 10,
     });
 
+    const isOptimizerSub = (s: Stripe.Subscription) =>
+      s.items.data.some(
+        (item) =>
+          item.price.id === optimizerPriceId ||
+          item.price.id === optimizerProPriceId,
+      );
+
     const activeSub = subs.data.find(
-      (s) =>
-        (s.status === 'active' || s.status === 'trialing') &&
-        s.items.data.some(
-          (item) =>
-            item.price.id === optimizerPriceId ||
-            item.price.id === optimizerProPriceId,
-        ),
+      (s) => (s.status === 'active' || s.status === 'trialing') && isOptimizerSub(s),
     );
 
     if (activeSub) {
@@ -93,11 +101,24 @@ router.post('/account/auth', async (req, res): Promise<void> => {
       res.json({ token });
       return;
     }
+
+    // Check for any optimizer subscription regardless of status (e.g. canceled, past_due)
+    if (subs.data.some(isOptimizerSub)) {
+      foundInactiveOptimizerSub = true;
+    }
   }
 
-  res.status(403).json({
-    error: 'No active Optimizer subscription found for that email.',
-  });
+  if (foundInactiveOptimizerSub) {
+    res.status(403).json({
+      error: 'Your trial or subscription is no longer active.',
+      errorCode: 'subscription_inactive',
+    });
+  } else {
+    res.status(403).json({
+      error: 'No active Optimizer subscription was found for that email.',
+      errorCode: 'no_subscription',
+    });
+  }
 });
 
 // ---------------------------------------------------------------------------

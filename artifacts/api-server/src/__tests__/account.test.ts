@@ -81,16 +81,56 @@ describe('POST /api/account/auth', () => {
     expect(res.status).toBe(400);
   });
 
-  it('returns 404 when no Stripe customer found', async () => {
+  it('returns 404 with errorCode "not_found" when no Stripe customer found', async () => {
     stripe.customers.search.mockResolvedValue({ data: [] });
     const res = await request(app)
       .post('/api/account/auth')
       .send({ email: 'nobody@example.com' });
     expect(res.status).toBe(404);
+    expect(res.body.errorCode).toBe('not_found');
+    expect(typeof res.body.error).toBe('string');
   });
 
-  it('returns 403 when customer has no active optimizer subscription', async () => {
-    // Customer found but subscription uses an unrelated price
+  it('returns 403 with errorCode "subscription_inactive" when customer has a canceled optimizer subscription', async () => {
+    // Customer found, but the optimizer subscription is canceled (not active/trialing)
+    stripe.subscriptions.list.mockResolvedValue({
+      data: [
+        makeActiveSub({
+          status: 'canceled',
+          items: {
+            data: [{ id: TEST_ITEM_ID, price: { id: OPTIMIZER_PRICE_ID, unit_amount: 2900, currency: 'usd' } }],
+          },
+        }),
+      ],
+    });
+    const res = await request(app)
+      .post('/api/account/auth')
+      .send({ email: 'test@example.com' });
+    expect(res.status).toBe(403);
+    expect(res.body.errorCode).toBe('subscription_inactive');
+    expect(typeof res.body.error).toBe('string');
+  });
+
+  it('returns 403 with errorCode "subscription_inactive" when customer has a past_due optimizer subscription', async () => {
+    stripe.subscriptions.list.mockResolvedValue({
+      data: [
+        makeActiveSub({
+          status: 'past_due',
+          items: {
+            data: [{ id: TEST_ITEM_ID, price: { id: OPTIMIZER_PRICE_ID, unit_amount: 2900, currency: 'usd' } }],
+          },
+        }),
+      ],
+    });
+    const res = await request(app)
+      .post('/api/account/auth')
+      .send({ email: 'test@example.com' });
+    expect(res.status).toBe(403);
+    expect(res.body.errorCode).toBe('subscription_inactive');
+  });
+
+  it('returns 403 with errorCode "no_subscription" when customer has only unrelated subscriptions', async () => {
+    // Customer found but subscription uses an unrelated price (never had optimizer)
     stripe.subscriptions.list.mockResolvedValue({
       data: [
         makeActiveSub({
@@ -104,6 +144,36 @@ describe('POST /api/account/auth', () => {
       .post('/api/account/auth')
       .send({ email: 'test@example.com' });
     expect(res.status).toBe(403);
+    expect(res.body.errorCode).toBe('no_subscription');
+  });
+
+  it('returns 403 with errorCode "no_subscription" when customer has no subscriptions at all', async () => {
+    stripe.subscriptions.list.mockResolvedValue({ data: [] });
+    const res = await request(app)
+      .post('/api/account/auth')
+      .send({ email: 'test@example.com' });
+    expect(res.status).toBe(403);
+    expect(res.body.errorCode).toBe('no_subscription');
+  });
+
+  it('passes status: "all" to subscriptions.list so canceled subs are included', async () => {
+    // Simulate a canceled optimizer sub (only visible with status: 'all')
+    stripe.subscriptions.list.mockResolvedValue({
+      data: [
+        makeActiveSub({
+          status: 'canceled',
+          items: {
+            data: [{ id: TEST_ITEM_ID, price: { id: OPTIMIZER_PRICE_ID, unit_amount: 2900, currency: 'usd' } }],
+          },
+        }),
+      ],
+    });
+    await request(app)
+      .post('/api/account/auth')
+      .send({ email: 'test@example.com' });
+    expect(stripe.subscriptions.list).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'all' }),
+    );
   });
 
   it('issues a 30-day JWT for a customer with an active optimizer subscription', async () => {

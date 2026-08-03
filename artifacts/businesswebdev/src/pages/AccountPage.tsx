@@ -111,30 +111,102 @@ const STATUS_STYLES: Record<string, string> = {
 // Email auth gate
 // ---------------------------------------------------------------------------
 
+type AuthError =
+  | { code: 'not_found'; message: string }
+  | { code: 'subscription_inactive'; message: string }
+  | { code: 'no_subscription'; message: string }
+  | { code: 'generic'; message: string };
+
+function AuthErrorBanner({ err }: { err: AuthError }) {
+  if (err.code === 'subscription_inactive') {
+    return (
+      <div className="text-sm bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
+        <div className="flex items-start gap-2 text-amber-800">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span className="font-medium">Your trial or subscription is no longer active.</span>
+        </div>
+        <p className="mt-1.5 text-amber-700 text-xs leading-relaxed">
+          To regain access, start a new subscription or{' '}
+          <a href="mailto:contact@businessweboptimizer.com" className="underline font-medium">
+            contact support
+          </a>{' '}
+          if you think this is a mistake.
+        </p>
+      </div>
+    );
+  }
+
+  if (err.code === 'not_found') {
+    return (
+      <div className="text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+        <div className="flex items-start gap-2 text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span className="font-medium">We couldn't find an account with that email.</span>
+        </div>
+        <p className="mt-1.5 text-red-600 text-xs leading-relaxed">
+          Double-check for typos and try again. Use the email you entered at checkout.
+        </p>
+      </div>
+    );
+  }
+
+  if (err.code === 'no_subscription') {
+    return (
+      <div className="text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+        <div className="flex items-start gap-2 text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span className="font-medium">No Optimizer subscription found for that email.</span>
+        </div>
+        <p className="mt-1.5 text-red-600 text-xs leading-relaxed">
+          Make sure you're using the email you signed up with, or{' '}
+          <a href="mailto:contact@businessweboptimizer.com" className="underline font-medium">
+            contact support
+          </a>{' '}
+          for help.
+        </p>
+      </div>
+    );
+  }
+
+  // Generic fallback
+  return (
+    <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+      {err.message}
+    </div>
+  );
+}
+
 function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<AuthError | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    setError('');
+    setError(null);
     try {
       const res = await fetch(`${BASE}/api/account/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
-      const data = (await res.json()) as { token?: string; error?: string };
+      const data = (await res.json()) as { token?: string; error?: string; errorCode?: string };
       if (!res.ok || !data.token) {
-        setError(data.error ?? 'Could not verify your account. Please try again.');
+        const message = data.error ?? 'Could not verify your account. Please try again.';
+        const code = data.errorCode;
+        if (code === 'not_found' || code === 'subscription_inactive' || code === 'no_subscription') {
+          setError({ code, message });
+        } else {
+          setError({ code: 'generic', message });
+        }
         return;
       }
       onSuccess(data.token);
     } catch {
-      setError('Network error. Please try again.');
+      setError({ code: 'generic', message: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -171,12 +243,7 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
             />
           </div>
 
-          {error && (
-            <div className="flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              {error}
-            </div>
-          )}
+          {error && <AuthErrorBanner err={error} />}
 
           <Button
             type="submit"
