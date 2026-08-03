@@ -112,7 +112,7 @@ const STATUS_STYLES: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 type AuthError =
-  | { code: 'not_found'; message: string }
+  | { code: 'not_found'; message: string; hint?: string }
   | { code: 'subscription_inactive'; message: string }
   | { code: 'no_subscription'; message: string }
   | { code: 'generic'; message: string };
@@ -146,6 +146,11 @@ function AuthErrorBanner({ err }: { err: AuthError }) {
         <p className="mt-1.5 text-red-600 text-xs leading-relaxed">
           Double-check for typos and try again. Use the email you entered at checkout.
         </p>
+        {err.hint && (
+          <p className="mt-2 text-red-700 text-xs font-medium">
+            Did you mean <span className="font-semibold">{err.hint}</span>?
+          </p>
+        )}
       </div>
     );
   }
@@ -193,11 +198,13 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
       });
-      const data = (await res.json()) as { token?: string; error?: string; errorCode?: string };
+      const data = (await res.json()) as { token?: string; error?: string; errorCode?: string; hint?: string };
       if (!res.ok || !data.token) {
         const message = data.error ?? 'Could not verify your account. Please try again.';
         const code = data.errorCode;
-        if (code === 'not_found' || code === 'subscription_inactive' || code === 'no_subscription') {
+        if (code === 'not_found') {
+          setError({ code, message, hint: data.hint });
+        } else if (code === 'subscription_inactive' || code === 'no_subscription') {
           setError({ code, message });
         } else {
           setError({ code: 'generic', message });

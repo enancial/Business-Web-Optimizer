@@ -4,6 +4,75 @@ import { getUncachableStripeClient, getStripePublishableKey } from '../stripeCli
 import { requireAuth, issueToken, type TokenPayload } from '../lib/authHelper';
 import type Stripe from 'stripe';
 
+// ---------------------------------------------------------------------------
+// Levenshtein distance (for email typo detection)
+// ---------------------------------------------------------------------------
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, (_, i) =>
+    Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+  );
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+
+/**
+ * Searches Stripe for customers with the same email domain and returns a
+ * masked hint (e.g. "j***@gmail.com") if a near-match (edit distance ≤ 2)
+ * is found on the local part.  Returns null if no useful hint is available.
+ */
+async function findEmailHint(stripe: Stripe, enteredEmail: string): Promise<string | null> {
+  const atIdx = enteredEmail.indexOf('@');
+  if (atIdx < 0) return null;
+
+  const localPart = enteredEmail.slice(0, atIdx).toLowerCase();
+  const domain = enteredEmail.slice(atIdx + 1).toLowerCase();
+
+  let results: Stripe.ApiSearchResult<Stripe.Customer>;
+  try {
+    results = await stripe.customers.search({
+      query: `email~"@${domain}"`,
+      limit: 10,
+    });
+  } catch {
+    return null;
+  }
+
+  let bestEmail: string | null = null;
+  let bestDist = Infinity;
+
+  for (const customer of results.data) {
+    const raw = customer.email?.toLowerCase() ?? '';
+    const custAt = raw.indexOf('@');
+    if (custAt < 0) continue;
+    const custLocal = raw.slice(0, custAt);
+    const custDomain = raw.slice(custAt + 1);
+    if (custDomain !== domain) continue; // same domain only
+    const dist = levenshtein(localPart, custLocal);
+    if (dist > 0 && dist <= 2 && dist < bestDist) {
+      bestDist = dist;
+      bestEmail = raw;
+    }
+  }
+
+  if (!bestEmail) return null;
+
+  // Mask: keep first character of local part, replace rest with ***, keep domain
+  const maskAt = bestEmail.indexOf('@');
+  const maskLocal = bestEmail.slice(0, maskAt);
+  const maskDomain = bestEmail.slice(maskAt);
+  return maskLocal.charAt(0) + '***' + maskDomain;
+}
+
 const router: IRouter = Router();
 
 // ---------------------------------------------------------------------------
@@ -61,9 +130,11 @@ router.post('/account/auth', async (req, res): Promise<void> => {
   }
 
   if (!customers.data.length) {
+    const hint = await findEmailHint(stripe, email.toLowerCase().trim());
     res.status(404).json({
       error: 'No account found for that email address. Please check for typos and try again.',
       errorCode: 'not_found',
+      ...(hint ? { hint } : {}),
     });
     return;
   }
