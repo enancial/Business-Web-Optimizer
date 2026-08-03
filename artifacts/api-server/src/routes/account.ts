@@ -73,6 +73,16 @@ async function findEmailHint(stripe: Stripe, enteredEmail: string): Promise<stri
   return maskLocal.charAt(0) + '***' + maskDomain;
 }
 
+/**
+ * Maximum ms to wait for the hint search before giving up and returning no hint.
+ * Overridable via HINT_TIMEOUT_MS env var so tests can inject a short value without
+ * fake timers.
+ */
+function getHintTimeoutMs(): number {
+  const override = Number(process.env.HINT_TIMEOUT_MS);
+  return Number.isFinite(override) && override > 0 ? override : 2500;
+}
+
 const router: IRouter = Router();
 
 // ---------------------------------------------------------------------------
@@ -130,7 +140,10 @@ router.post('/account/auth', async (req, res): Promise<void> => {
   }
 
   if (!customers.data.length) {
-    const hint = await findEmailHint(stripe, email.toLowerCase().trim());
+    const hint = await Promise.race<string | null>([
+      findEmailHint(stripe, email.toLowerCase().trim()),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), getHintTimeoutMs())),
+    ]);
     res.status(404).json({
       error: 'No account found for that email address. Please check for typos and try again.',
       errorCode: 'not_found',

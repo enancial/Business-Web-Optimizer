@@ -263,6 +263,41 @@ describe('email hint — no near-match found', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Timeout guard: hint search must not block the response
+// ---------------------------------------------------------------------------
+
+describe('email hint — timeout guard', () => {
+  it('returns 404 without a hint when the hint search takes longer than the timeout', async () => {
+    // Inject a very short timeout (50 ms) so the test completes quickly.
+    // The domain-scan mock delays 150 ms — longer than the timeout — simulating a slow Stripe call.
+    process.env.HINT_TIMEOUT_MS = '50';
+
+    try {
+      // First search (exact lookup) → no customer found
+      // Second search (domain scan inside findEmailHint) → resolves after 150 ms (past the 50 ms timeout)
+      stripe.customers.search
+        .mockResolvedValueOnce({ data: [] })
+        .mockImplementationOnce(
+          () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 150)),
+        );
+
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/auth')
+        .send({ email: 'john@example.com' });
+      const elapsed = Date.now() - start;
+
+      // Should respond well before the 150 ms delay completes (the 50 ms timeout fired first)
+      expect(elapsed).toBeLessThan(140);
+      expect(res.status).toBe(404);
+      expect(res.body.hint).toBeUndefined();
+    } finally {
+      delete process.env.HINT_TIMEOUT_MS;
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Best-match selection: when multiple candidates exist, the closest is used
 // ---------------------------------------------------------------------------
 
