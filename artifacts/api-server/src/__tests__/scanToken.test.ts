@@ -2,10 +2,17 @@
  * Tests for POST /api/issue-scan-token
  *
  * Covers:
+ *  PaymentIntent path (legacy):
  *  - Missing / malformed paymentIntentId → 400
  *  - PaymentIntent not yet succeeded → 422
  *  - PaymentIntent missing action metadata → 422
  *  - Valid PaymentIntent → 200 + signed JWT with correct payload
+ *
+ *  SetupIntent path (trial):
+ *  - Valid SetupIntent → 200 + signed JWT with correct payload
+ *  - SetupIntent not succeeded → 422
+ *  - SetupIntent with no trialing subscription → 422
+ *  - SetupIntent returns optimizer-pro when price matches
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type Stripe from 'stripe';
@@ -20,7 +27,14 @@ vi.mock('../stripeClient', () => ({
 
 import app from '../app';
 import { getUncachableStripeClient } from '../stripeClient';
-import { createStripeMock, TEST_CUSTOMER_ID, type StripeMock } from './helpers/stripeMock';
+import {
+  createStripeMock,
+  TEST_CUSTOMER_ID,
+  OPTIMIZER_PRICE_ID,
+  OPTIMIZER_PRO_PRICE_ID,
+  TEST_SUB_ID,
+  type StripeMock,
+} from './helpers/stripeMock';
 
 const TEST_SECRET = 'test-secret-for-automated-tests-only';
 
@@ -36,6 +50,7 @@ function decodeToken(token: string) {
 let stripe: StripeMock;
 
 beforeEach(() => {
+  vi.resetAllMocks();
   stripe = createStripeMock();
   // Configure a valid PaymentIntent for issue-scan-token
   stripe.paymentIntents.retrieve.mockResolvedValue({
@@ -43,6 +58,19 @@ beforeEach(() => {
     status: 'succeeded',
     customer: TEST_CUSTOMER_ID,
     metadata: { action: 'create_subscription', product: 'optimizer' },
+  });
+  // SetupIntent default: succeeded, with a trialing optimizer subscription
+  stripe.setupIntents.retrieve.mockResolvedValue({
+    id: 'seti_valid',
+    status: 'succeeded',
+    customer: TEST_CUSTOMER_ID,
+  });
+  stripe.subscriptions.list.mockResolvedValue({
+    data: [{
+      id: TEST_SUB_ID,
+      status: 'trialing',
+      items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
+    }],
   });
   vi.mocked(getUncachableStripeClient).mockResolvedValue(
     stripe as unknown as Stripe,
@@ -116,5 +144,65 @@ describe('POST /api/issue-scan-token', () => {
     expect(res.status).toBe(200);
     const payload = decodeToken(res.body.token);
     expect(payload.product).toBe('optimizer-pro');
+  });
+});
+
+describe('POST /api/issue-scan-token — SetupIntent (trial) path', () => {
+  it('issues a valid 30-day JWT for a succeeded SetupIntent with trialing subscription', async () => {
+    const res = await request(app)
+      .post('/api/issue-scan-token')
+      .send({ setupIntentId: 'seti_valid' });
+
+    expect(res.status).toBe(200);
+    expect(typeof res.body.token).toBe('string');
+
+    const payload = decodeToken(res.body.token);
+    expect(payload.tier).toBe('paid');
+    expect(payload.customerId).toBe(TEST_CUSTOMER_ID);
+    expect(payload.product).toBe('optimizer');
+    const nowSec = Math.floor(Date.now() / 1000);
+    expect(payload.exp - nowSec).toBeGreaterThan(30 * 24 * 3600 - 60);
+  });
+
+  it('issues an optimizer-pro token when the trialing subscription is on the pro price', async () => {
+    stripe.subscriptions.list.mockResolvedValue({
+      data: [{
+        id: TEST_SUB_ID,
+        status: 'trialing',
+        items: { data: [{ price: { id: OPTIMIZER_PRO_PRICE_ID } }] },
+      }],
+    });
+
+    const res = await request(app)
+      .post('/api/issue-scan-token')
+      .send({ setupIntentId: 'seti_valid' });
+
+    expect(res.status).toBe(200);
+    const payload = decodeToken(res.body.token);
+    expect(payload.product).toBe('optimizer-pro');
+  });
+
+  it('returns 422 when SetupIntent status is not succeeded', async () => {
+    stripe.setupIntents.retrieve.mockResolvedValue({
+      id: 'seti_pending',
+      status: 'requires_action',
+      customer: TEST_CUSTOMER_ID,
+    });
+
+    const res = await request(app)
+      .post('/api/issue-scan-token')
+      .send({ setupIntentId: 'seti_pending' });
+
+    expect(res.status).toBe(422);
+  });
+
+  it('returns 422 when no trialing optimizer subscription is found for the customer', async () => {
+    stripe.subscriptions.list.mockResolvedValue({ data: [] });
+
+    const res = await request(app)
+      .post('/api/issue-scan-token')
+      .send({ setupIntentId: 'seti_valid' });
+
+    expect(res.status).toBe(422);
   });
 });

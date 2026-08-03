@@ -6,7 +6,7 @@ A SaaS site-optimisation tool: paste any URL, get an instant performance/SEO rep
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm --filter @workspace/businesswebdev run dev` — run the frontend (Vite, dynamic port)
-- `pnpm --filter @workspace/api-server run test` — run all backend tests (Vitest, 63 tests)
+- `pnpm --filter @workspace/api-server run test` — run all backend tests (Vitest, ~83 tests)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm --filter @workspace/db run push` — push Drizzle schema changes to the live Postgres DB (dev only)
 
@@ -41,18 +41,20 @@ A SaaS site-optimisation tool: paste any URL, get an instant performance/SEO rep
 
 ## Product
 
-- **Free tier**: scan any URL, get a basic report, receive it by email.
-- **Optimizer** (`/checkout?product=optimizer`): full report with all checks.
-- **Optimizer Pro** (`/checkout?product=optimizer-pro`): full report **plus** schema.org structured-data deep-dive and white-label flag.
+- **Free tier**: scan any URL, up to 5 pages, top 3 issues. No credit card required.
+- **Optimizer** (`/checkout?product=optimizer`): 7-day free trial, then $29/mo. Full report with all checks.
+- **Optimizer Pro** (`/checkout?product=optimizer-pro`): 7-day free trial, then $79/mo. Full report **plus** schema.org deep-dive and white-label flag.
 - **Affiliate program**: affiliates sign up at `/affiliates/join`, share a referral link (`/?ref=CODE`), earn 30 % commission for 12 months on each paid subscriber they refer. Dashboard at `/affiliates/dashboard`. Admin payout UI at `/admin/affiliate-payouts`.
+- **Trial/affiliate details**: see `TRIAL_AND_AFFILIATES.md`.
 
 ## Architecture Decisions
 
 - **Tier from JWT only**: plan/product is always derived from the verified JWT bearer token; client-supplied body fields are ignored.
 - **Expired tokens**: server returns `401 + { tokenExpired: true }`; tampered/malformed tokens fall back silently to free tier.
 - **No Stripe Customer Portal**: all account management is on-site at `/account`.
-- **Affiliate tracking**: referral code passed through checkout URL (`?ref=CODE`) → stored in Stripe PaymentIntent metadata → read back in `payment_intent.succeeded` webhook → written to `affiliate_conversions` table.
-- **Commission window**: 30 % of `invoice.amount_paid` for the first 12 months from `affiliate_conversions.created_at`. Enforced in `invoice.paid` webhook handler.
+- **Checkout flow (trial)**: `POST /api/create-payment-intent` creates a Stripe Subscription with `trial_period_days: 7` and returns a SetupIntent `client_secret` (`intentType: 'setup'`). Frontend calls `stripe.confirmSetup()` — no charge on day 0. Stripe charges after 7 days via `invoice.paid`.
+- **Affiliate tracking (trial)**: referral code stored in Stripe Subscription metadata → `customer.subscription.created` (status: `trialing`) webhook → `affiliate_conversions` table. Legacy `payment_intent.succeeded` path kept for backward compatibility.
+- **Commission window**: 30 % of `invoice.amount_paid` for 12 months from `affiliate_conversions.created_at`. Trial's $0 invoice is skipped by the `amount_paid <= 0` guard.
 - **Payout flow**: manual PayPal; admin marks rows paid via `/api/admin/affiliate-mark-paid`; CSV download available.
 
 ## Gotchas
@@ -60,7 +62,8 @@ A SaaS site-optimisation tool: paste any URL, get an instant performance/SEO rep
 - **`stripe-replit-sync`**: `runMigrations()` takes no `schema` parameter; tables don't exist until the first successful webhook run.
 - **Affiliate DB tables**: `affiliates`, `affiliate_conversions`, `affiliate_earnings` — created by `pnpm --filter @workspace/db run push`.
 - **`ADMIN_SECRET`** must be set before admin routes will accept requests; a missing secret causes all admin calls to return 401.
-- **Free ($0 promo) affiliate tracking**: not yet implemented — only paid-subscription conversions are tracked via `payment_intent.succeeded`.
+- **Free ($0 promo) affiliate tracking**: not tracked — only conversions that lead to a paid subscription are attributed.
+- **Trial entitlement**: `status === 'trialing'` grants full paid features — `getActiveSub()` in `account.ts` already handles both statuses; no code change needed.
 
 ## User Preferences
 

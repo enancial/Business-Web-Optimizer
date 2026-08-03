@@ -161,18 +161,21 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
 // ---------------------------------------------------------------------------
 
 /**
- * Creates the appropriate Stripe payment object and returns a clientSecret.
+ * Creates the appropriate Stripe object for checkout and returns a clientSecret.
  *
- * - optimizer     → PaymentIntent with setup_future_usage (webhook creates subscription)
- * - optimizer-pro → PaymentIntent with setup_future_usage (webhook creates subscription)
+ * - optimizer / optimizer-pro (paid) → Creates a Subscription with trial_period_days: 7
+ *   and payment_behavior: 'default_incomplete'. Stripe attaches a pending_setup_intent;
+ *   its client_secret (intentType: 'setup') lets the frontend collect card details via
+ *   PaymentElement with no charge today. After day 7 Stripe charges automatically and
+ *   fires invoice.paid — which is when affiliate earnings accrue.
  *
- * If a valid promotionCode is supplied and reduces the amount to $0, this
- * endpoint handles the order directly (no PaymentIntent is needed for $0) and
- * returns { isFree: true } so the frontend can skip card entry.
+ * - $0 after promo → Creates the subscription directly; returns { isFree: true }
+ *   so the frontend can skip card entry.
  *
- * Body:  { product: 'optimizer' | 'optimizer-pro', promotionCode?: string }
- * Returns: { clientSecret?: string, publishableKey: string, isFree?: boolean,
- *            originalAmount?: number, discountedAmount?: number, currency?: string,
+ * Body:  { product: 'optimizer' | 'optimizer-pro', promotionCode?: string, affiliateCode?: string }
+ * Returns: { clientSecret?: string, intentType?: 'setup', trialDays?: number,
+ *            publishableKey: string, isFree?: boolean,
+ *            originalAmount: number, discountedAmount: number, currency: string,
  *            discountLabel?: string }
  */
 router.post('/create-payment-intent', async (req, res): Promise<void> => {
@@ -287,19 +290,23 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
     return;
   }
 
-  // ── Paid subscription — collect payment + save card for recurring charges ──
+  // ── Trial subscription — collect card, charge after 7 days ─────────────────
+  // Stripe creates a pending_setup_intent on the subscription; the frontend
+  // confirms it via PaymentElement (no charge today). After day 7 Stripe issues
+  // the first invoice and charges the saved payment method automatically.
   const customer = await stripe.customers.create();
 
-  const intent = await stripe.paymentIntents.create({
-    amount: discountedAmount,
-    currency: price.currency,
+  const subscription = await stripe.subscriptions.create({
     customer: customer.id,
-    setup_future_usage: 'off_session',
-    automatic_payment_methods: { enabled: true },
+    items: [{ price: priceId }],
+    trial_period_days: 7,
+    payment_behavior: 'default_incomplete',
+    payment_settings: { save_default_payment_method: 'on_subscription' },
+    expand: ['pending_setup_intent'],
+    ...(promoCode ? { discounts: [{ promotion_code: promoCode.id }] } : {}),
     metadata: {
       product,
       price_id: priceId,
-      action: 'create_subscription',
       ...(promoCode
         ? { promotion_code_id: promoCode.id, promotion_code: promoCode.code }
         : {}),
@@ -307,7 +314,28 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
     },
   });
 
-  res.json({ ...responseBase, clientSecret: intent.client_secret });
+  const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;
+  if (!setupIntent?.client_secret) {
+    req.log.error(
+      { subscriptionId: subscription.id },
+      'No pending_setup_intent on trial subscription — aborting checkout',
+    );
+    await stripe.subscriptions.cancel(subscription.id);
+    res.status(500).json({ error: 'Could not initialise trial checkout. Please try again.' });
+    return;
+  }
+
+  req.log.info(
+    { subscriptionId: subscription.id, product, trialDays: 7 },
+    'Trial subscription created — awaiting SetupIntent confirmation',
+  );
+
+  res.json({
+    ...responseBase,
+    clientSecret: setupIntent.client_secret,
+    intentType: 'setup',
+    trialDays: 7,
+  });
 });
 
 export default router;

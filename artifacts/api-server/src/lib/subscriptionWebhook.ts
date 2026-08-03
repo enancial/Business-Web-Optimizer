@@ -31,6 +31,9 @@ export async function handleWebhookEvent(
     case 'invoice.paid':
       await onInvoicePaid(event.data.object as Stripe.Invoice, log);
       break;
+    case 'customer.subscription.created':
+      await onSubscriptionCreated(event.data.object as Stripe.Subscription, log);
+      break;
     case 'customer.subscription.deleted':
       await onSubscriptionDeleted(event.data.object as Stripe.Subscription, log);
       break;
@@ -283,6 +286,36 @@ async function onInvoicePaid(invoice: Stripe.Invoice, log: Logger): Promise<void
     },
     'Affiliate earnings recorded for invoice.paid',
   );
+}
+
+// ---------------------------------------------------------------------------
+// customer.subscription.created — record affiliate conversion at trial start
+// ---------------------------------------------------------------------------
+
+async function onSubscriptionCreated(
+  subscription: Stripe.Subscription,
+  log: Logger,
+): Promise<void> {
+  // Only attribute trial subscriptions here. Active (non-trial) subscriptions
+  // from the old PaymentIntent flow are attributed in onPaymentIntentSucceeded.
+  if (subscription.status !== 'trialing') return;
+
+  const affiliateCode = subscription.metadata?.affiliate_code;
+  if (!affiliateCode) return;
+
+  const customerId =
+    typeof subscription.customer === 'string'
+      ? subscription.customer
+      : (subscription.customer as Stripe.Customer | null)?.id ?? '';
+
+  const product = subscription.metadata?.product;
+
+  log.info(
+    { subscriptionId: subscription.id, affiliateCode, product },
+    'Trial subscription created with affiliate code — recording conversion',
+  );
+
+  await recordAffiliateConversion(affiliateCode, customerId, subscription.id, product, log);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useSearch } from 'wouter';
-import { CheckCircle2, LayoutDashboard } from 'lucide-react';
+import { CheckCircle2, LayoutDashboard, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SCAN_TOKEN_KEY } from '@/hooks/useAccountToken';
 
@@ -11,16 +11,26 @@ export function Success() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const paymentIntentId = params.get('payment_intent');
+  const setupIntentId = params.get('setup_intent');
 
-  // Exchange PaymentIntent for a signed scan token and store it
+  // Determine which flow completed
+  const isTrial = Boolean(setupIntentId);
+
+  // Exchange the Stripe intent ID for a signed scan token and store it.
+  // - Trial (SetupIntent) path: ?setup_intent=seti_…
+  // - Legacy (PaymentIntent) path: ?payment_intent=pi_…
   useEffect(() => {
-    if (!paymentIntentId) return;
+    const intentId = setupIntentId ?? paymentIntentId;
+    if (!intentId) return;
     void (async () => {
       try {
+        const body = setupIntentId
+          ? { setupIntentId }
+          : { paymentIntentId };
         const res = await fetch(`${BASE}/api/issue-scan-token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentIntentId }),
+          body: JSON.stringify(body),
         });
         if (!res.ok) return;
         const data = (await res.json()) as { token?: string };
@@ -31,7 +41,7 @@ export function Success() {
         // Non-fatal — they can sign in at /account
       }
     })();
-  }, [paymentIntentId]);
+  }, [paymentIntentId, setupIntentId]);
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-20">
@@ -39,13 +49,27 @@ export function Success() {
         <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-6" />
 
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-          You're subscribed!
+          {isTrial ? 'Your free trial has started!' : "You're subscribed!"}
         </h1>
 
-        <p className="text-slate-300 leading-relaxed mb-4">
-          Your payment was received and your subscription is now active. Check your inbox for a
-          confirmation — your first scan report will be on its way shortly.
-        </p>
+        {isTrial ? (
+          <>
+            <div className="flex items-center justify-center gap-2 text-emerald-300 mb-4">
+              <Calendar className="h-5 w-5 shrink-0" />
+              <p className="text-lg font-semibold">No charge today</p>
+            </div>
+            <p className="text-slate-300 leading-relaxed mb-4">
+              You have full access for the next 7 days. We'll charge your card automatically
+              after your trial — cancel anytime from your account page before then and
+              you won't be billed.
+            </p>
+          </>
+        ) : (
+          <p className="text-slate-300 leading-relaxed mb-4">
+            Your payment was received and your subscription is now active. Check your inbox for a
+            confirmation — your first scan report will be on its way shortly.
+          </p>
+        )}
 
         <p className="text-slate-400 text-sm mb-10">
           Questions?{' '}

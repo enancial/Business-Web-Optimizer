@@ -212,6 +212,24 @@ function makeSubscriptionDeletedEvent(subscriptionId = 'sub_aff_test'): Stripe.E
   } as unknown as Stripe.Event;
 }
 
+function makeSubscriptionCreatedEvent(
+  overrides: { status?: string; metadata?: Record<string, string> } = {},
+): Stripe.Event {
+  return {
+    id: 'evt_sub_created_test',
+    type: 'customer.subscription.created',
+    data: {
+      object: {
+        id: 'sub_trial_test',
+        status: overrides.status ?? 'trialing',
+        customer: TEST_CUSTOMER_ID,
+        metadata: overrides.metadata ?? {},
+        items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
+      } as Stripe.Subscription,
+    },
+  } as unknown as Stripe.Event;
+}
+
 // ===========================================================================
 // Test suites
 // ===========================================================================
@@ -446,6 +464,14 @@ describe('Affiliate flow — invoice.paid', () => {
     // Only the conversion lookup runs — no second select for idempotency
     expect(mockSelect).toHaveBeenCalledTimes(1);
   });
+
+  it('skips earnings for a $0 trial invoice (amount_paid = 0)', async () => {
+    // The onInvoicePaid guard (amount_paid <= 0) must exit before any DB call
+    await handleWebhookEvent(makeInvoicePaidEvent({ amount_paid: 0 }), mockLog);
+
+    expect(mockSelect).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -483,5 +509,73 @@ describe('Affiliate flow — customer.subscription.deleted', () => {
       expect.anything(),
       expect.stringContaining('marked as canceled'),
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// customer.subscription.created — affiliate conversion at trial start
+// ---------------------------------------------------------------------------
+
+describe('Affiliate flow — customer.subscription.created (trial)', () => {
+  it('records a conversion when status is trialing and affiliate_code is set', async () => {
+    mockSelect.mockReturnValueOnce(dbChain([TEST_AFFILIATE]));
+    const insertChain = dbChain([]);
+    mockInsert.mockReturnValueOnce(insertChain);
+
+    await handleWebhookEvent(
+      makeSubscriptionCreatedEvent({
+        status: 'trialing',
+        metadata: { affiliate_code: 'AFFTEST1', product: 'optimizer', price_id: OPTIMIZER_PRICE_ID },
+      }),
+      mockLog,
+    );
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    expect(mockLog.info).toHaveBeenCalledWith(
+      expect.objectContaining({ affiliateId: 1 }),
+      expect.stringContaining('Affiliate conversion recorded'),
+    );
+  });
+
+  it('records plan = optimizer-pro when product metadata says optimizer-pro', async () => {
+    mockSelect.mockReturnValueOnce(dbChain([TEST_AFFILIATE]));
+    const insertChain = dbChain([]);
+    mockInsert.mockReturnValueOnce(insertChain);
+
+    await handleWebhookEvent(
+      makeSubscriptionCreatedEvent({
+        status: 'trialing',
+        metadata: { affiliate_code: 'AFFTEST1', product: 'optimizer-pro' },
+      }),
+      mockLog,
+    );
+
+    const valuesArg = (
+      insertChain as Record<string, ReturnType<typeof vi.fn>>
+    ).values.mock.calls[0][0] as Record<string, unknown>;
+    expect(valuesArg.plan).toBe('optimizer-pro');
+  });
+
+  it('is a no-op when subscription status is active (not a trial)', async () => {
+    await handleWebhookEvent(
+      makeSubscriptionCreatedEvent({
+        status: 'active',
+        metadata: { affiliate_code: 'AFFTEST1', product: 'optimizer' },
+      }),
+      mockLog,
+    );
+
+    expect(mockSelect).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when there is no affiliate_code in subscription metadata', async () => {
+    await handleWebhookEvent(
+      makeSubscriptionCreatedEvent({ status: 'trialing', metadata: {} }),
+      mockLog,
+    );
+
+    expect(mockSelect).not.toHaveBeenCalled();
+    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

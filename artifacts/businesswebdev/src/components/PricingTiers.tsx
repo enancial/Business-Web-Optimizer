@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Zap } from 'lucide-react';
+import { CheckCircle2, Zap, Calendar } from 'lucide-react';
 
 interface Tier {
   id: string;
@@ -8,6 +8,7 @@ interface Tier {
   badge?: string;
   price: string;
   period?: string;
+  trialNote?: string;
   description: string;
   features: string[];
   cta: string;
@@ -19,9 +20,9 @@ interface Tier {
 const tiers: Tier[] = [
   {
     id: 'free',
-    label: 'Free Trial',
+    label: 'Free',
     price: '$0',
-    description: '1 scan, limited pages, top issues only.',
+    description: 'Scan up to 5 pages, see your top 3 issues. No credit card required.',
     features: [
       'Scan up to 5 pages',
       'Top 3 priority issues',
@@ -38,6 +39,7 @@ const tiers: Tier[] = [
     badge: 'Most Popular',
     price: '$29',
     period: '/mo',
+    trialNote: '7-day free trial',
     description: 'Full site scan, deeper checks, exportable PDF report, monthly re-scan.',
     features: [
       'Unlimited page scans',
@@ -47,7 +49,7 @@ const tiers: Tier[] = [
       'Monthly re-scan included',
       'Email delivery of report',
     ],
-    cta: 'Get Optimizer',
+    cta: 'Start 7-day free trial',
     href: '/checkout?product=optimizer',
     highlighted: true,
     testId: 'tier-optimizer',
@@ -57,6 +59,7 @@ const tiers: Tier[] = [
     label: 'Optimizer Pro',
     price: '$79',
     period: '/mo',
+    trialNote: '7-day free trial',
     description: 'Everything in Optimizer, plus scheduled scans, competitor comparison, white-label reports, API access.',
     features: [
       'Everything in Optimizer',
@@ -66,7 +69,7 @@ const tiers: Tier[] = [
       'API access',
       'Priority support',
     ],
-    cta: 'Get Optimizer Pro',
+    cta: 'Start 7-day free trial',
     href: '/checkout?product=optimizer-pro',
     testId: 'tier-optimizer-pro',
   },
@@ -90,7 +93,7 @@ export function PricingTiers() {
             Simple, transparent pricing
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start free. Upgrade when you're ready. Cancel anytime.
+            Start free. Try paid plans risk-free for 7 days. Cancel anytime.
           </p>
         </motion.div>
 
@@ -122,7 +125,7 @@ export function PricingTiers() {
                 <p className={`text-sm font-semibold uppercase tracking-wide mb-2 ${tier.highlighted ? 'text-blue-200' : 'text-muted-foreground'}`}>
                   {tier.label}
                 </p>
-                <div className="flex items-baseline gap-1 mb-3">
+                <div className="flex items-baseline gap-1 mb-1">
                   <span className={`text-4xl font-bold ${tier.highlighted ? 'text-white' : 'text-foreground'}`}>
                     {tier.price}
                   </span>
@@ -132,6 +135,12 @@ export function PricingTiers() {
                     </span>
                   )}
                 </div>
+                {tier.trialNote && (
+                  <div className={`flex items-center gap-1.5 text-xs font-semibold mb-3 ${tier.highlighted ? 'text-green-300' : 'text-green-700'}`}>
+                    <Calendar className="h-3 w-3" />
+                    {tier.trialNote} — no charge today
+                  </div>
+                )}
                 <p className={`text-sm leading-relaxed ${tier.highlighted ? 'text-blue-100' : 'text-muted-foreground'}`}>
                   {tier.description}
                 </p>
@@ -165,7 +174,7 @@ export function PricingTiers() {
 
               {tier.id !== 'free' && (
                 <p className={`text-xs text-center mt-3 ${tier.highlighted ? 'text-blue-200' : 'text-muted-foreground'}`}>
-                  Cancel anytime
+                  Cancel before day 7 — no charge
                 </p>
               )}
             </motion.div>

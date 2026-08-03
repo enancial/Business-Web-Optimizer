@@ -85,12 +85,15 @@ export interface StripeMock {
   subscriptions: {
     list: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
   };
   invoices: {
     list: ReturnType<typeof vi.fn>;
   };
   setupIntents: {
     create: ReturnType<typeof vi.fn>;
+    retrieve: ReturnType<typeof vi.fn>;
   };
   paymentMethods: {
     attach: ReturnType<typeof vi.fn>;
@@ -112,12 +115,24 @@ export function createStripeMock(): StripeMock {
     subscriptions: {
       list: vi.fn().mockResolvedValue({ data: [makeActiveSub()] }),
       update: vi.fn().mockResolvedValue(makeActiveSub()),
+      create: vi.fn().mockResolvedValue({
+        id: TEST_SUB_ID,
+        status: 'trialing',
+        items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
+        pending_setup_intent: { client_secret: 'seti_test_secret_sub' },
+      }),
+      cancel: vi.fn().mockResolvedValue({ id: TEST_SUB_ID, status: 'canceled' }),
     },
     invoices: {
       list: vi.fn().mockResolvedValue({ data: [makeInvoice()] }),
     },
     setupIntents: {
       create: vi.fn().mockResolvedValue({ client_secret: 'seti_test_secret' }),
+      retrieve: vi.fn().mockResolvedValue({
+        id: 'seti_test',
+        status: 'succeeded',
+        customer: TEST_CUSTOMER_ID,
+      }),
     },
     paymentMethods: {
       attach: vi.fn().mockResolvedValue({ id: 'pm_new' }),

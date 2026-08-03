@@ -7,7 +7,7 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import { ArrowLeft, LockKeyhole, Tag, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, LockKeyhole, Tag, CheckCircle2, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -20,7 +20,6 @@ type Product = 'optimizer' | 'optimizer-pro';
 interface ProductMeta {
   label: string;
   price: string;
-  description: string;
   unitAmount: number; // cents — displayed before API call
   currency: string;
 }
@@ -29,16 +28,12 @@ const PRODUCT_META: Record<Product, ProductMeta> = {
   'optimizer': {
     label: 'Optimizer',
     price: '$29/month',
-    description:
-      'Full site scan, deeper checks, exportable PDF report, and monthly re-scan.',
     unitAmount: 2900,
     currency: 'usd',
   },
   'optimizer-pro': {
     label: 'Optimizer Pro',
     price: '$79/month',
-    description:
-      'Everything in Optimizer, plus scheduled scans, competitor comparison, white-label reports, and API access.',
     unitAmount: 7900,
     currency: 'usd',
   },
@@ -55,6 +50,10 @@ interface PromoResult {
 
 interface IntentResult {
   clientSecret?: string;
+  /** 'setup' for trial subscriptions (SetupIntent); 'payment' for legacy PaymentIntent */
+  intentType?: 'setup' | 'payment';
+  /** Number of trial days — present when intentType === 'setup' */
+  trialDays?: number;
   publishableKey: string;
   isFree?: boolean;
   originalAmount: number;
@@ -130,9 +129,7 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
     setCodeInput('');
   }
 
-  const displayAmount = promoResult
-    ? promoResult.discountedAmount
-    : meta.unitAmount;
+  const displayAmount = promoResult ? promoResult.discountedAmount : meta.unitAmount;
   const displayCurrency = promoResult ? promoResult.currency : meta.currency;
 
   return (
@@ -143,7 +140,7 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
           <div>
             <p className="font-semibold">{meta.label}</p>
             <p className="text-sm text-muted-foreground mt-0.5">
-              {meta.description}
+              Full access to all {meta.label} features during your 7-day trial.
             </p>
           </div>
           <div className="text-right shrink-0">
@@ -155,9 +152,13 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
                 <p className="font-bold text-green-700 text-lg">
                   {formatAmount(promoResult.discountedAmount, promoResult.currency)}
                 </p>
+                <p className="text-xs text-muted-foreground">/mo after trial</p>
               </>
             ) : (
-              <p className="font-bold text-lg">{meta.price}</p>
+              <>
+                <p className="font-bold text-lg">{meta.price}</p>
+                <p className="text-xs text-muted-foreground">after trial</p>
+              </>
             )}
           </div>
         </div>
@@ -179,6 +180,17 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
           </div>
         )}
       </div>
+
+      {/* Trial callout */}
+      {displayAmount > 0 && (
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-800">
+          <Calendar className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            <strong>7 days free.</strong> No charge today. Cancel anytime before day&nbsp;7
+            and you won't be billed.
+          </span>
+        </div>
+      )}
 
       {/* Promo code input */}
       {!promoResult && (
@@ -223,7 +235,7 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
         >
           {displayAmount === 0
             ? 'Claim free access'
-            : `Continue — ${formatAmount(displayAmount, displayCurrency)}/mo`}
+            : 'Start 7-day free trial →'}
         </Button>
         <Button type="button" variant="outline" onClick={onBack} className="sm:w-auto">
           Cancel
@@ -254,7 +266,7 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const meta = PRODUCT_META[product];
+  const isTrial = intentResult.intentType === 'setup';
   const returnUrl = new URL(
     'success',
     window.location.origin + import.meta.env.BASE_URL,
@@ -266,10 +278,16 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
     setIsProcessing(true);
     setErrorMessage(null);
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl },
-    });
+    // SetupIntent (trial) → confirmSetup; PaymentIntent (legacy) → confirmPayment
+    const { error } = isTrial
+      ? await stripe.confirmSetup({
+          elements,
+          confirmParams: { return_url: returnUrl },
+        })
+      : await stripe.confirmPayment({
+          elements,
+          confirmParams: { return_url: returnUrl },
+        });
 
     if (error) {
       setErrorMessage(error.message ?? 'Something went wrong. Please try again.');
@@ -277,26 +295,55 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
     }
   }
 
+  const meta = PRODUCT_META[product];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Amount summary */}
       <div className="bg-muted/40 border border-border rounded-lg p-5 space-y-1">
-        <p className="text-sm text-muted-foreground">{meta.description}</p>
-        <div className="flex items-baseline gap-2">
-          {intentResult.discountLabel && (
-            <span className="text-sm line-through text-muted-foreground">
-              {formatAmount(intentResult.originalAmount, intentResult.currency)}
-            </span>
-          )}
-          <span className="font-bold text-lg">
-            {formatAmount(intentResult.discountedAmount, intentResult.currency)}/mo
-          </span>
-          {intentResult.discountLabel && (
-            <span className="text-xs text-green-700 font-medium">
-              ({intentResult.discountLabel})
-            </span>
-          )}
-        </div>
+        {isTrial ? (
+          <>
+            <div className="flex items-center gap-2 text-blue-700 text-sm font-semibold mb-1">
+              <Calendar className="h-4 w-4" />
+              7-day free trial — {meta.label}
+            </div>
+            <p className="text-sm text-muted-foreground">No charge today. After your trial:</p>
+            <div className="flex items-baseline gap-2">
+              {intentResult.discountLabel && (
+                <span className="text-sm line-through text-muted-foreground">
+                  {formatAmount(intentResult.originalAmount, intentResult.currency)}
+                </span>
+              )}
+              <span className="font-bold text-lg">
+                {formatAmount(intentResult.discountedAmount, intentResult.currency)}/mo
+              </span>
+              {intentResult.discountLabel && (
+                <span className="text-xs text-green-700 font-medium">
+                  ({intentResult.discountLabel})
+                </span>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">{meta.label}</p>
+            <div className="flex items-baseline gap-2">
+              {intentResult.discountLabel && (
+                <span className="text-sm line-through text-muted-foreground">
+                  {formatAmount(intentResult.originalAmount, intentResult.currency)}
+                </span>
+              )}
+              <span className="font-bold text-lg">
+                {formatAmount(intentResult.discountedAmount, intentResult.currency)}/mo
+              </span>
+              {intentResult.discountLabel && (
+                <span className="text-xs text-green-700 font-medium">
+                  ({intentResult.discountLabel})
+                </span>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Stripe Payment Element */}
@@ -310,7 +357,9 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
 
       <p className="text-xs text-muted-foreground flex items-start gap-1.5">
         <LockKeyhole className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-        Payments are processed securely via Stripe. Cancel anytime.
+        {isTrial
+          ? "Your card is saved securely via Stripe. You won't be charged until after day 7. Cancel anytime."
+          : 'Payments are processed securely via Stripe. Cancel anytime.'}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -319,7 +368,11 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
           disabled={!stripe || isProcessing}
           className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base"
         >
-          {isProcessing ? 'Processing…' : 'Subscribe now'}
+          {isProcessing
+            ? 'Starting trial…'
+            : isTrial
+            ? 'Start 7-day free trial'
+            : 'Subscribe now'}
         </Button>
         <Button type="button" variant="outline" onClick={onBack} className="sm:w-auto">
           Back
@@ -402,7 +455,6 @@ export function CheckoutPage() {
         return;
       }
 
-      // Load Stripe and mount Payment Element
       const sp = loadStripe(data.publishableKey);
       setStripePromise(sp);
       setStep('payment');
@@ -468,6 +520,8 @@ export function CheckoutPage() {
     ? { clientSecret: intentResult.clientSecret, appearance: { theme: 'stripe' } }
     : {};
 
+  const isTrial = intentResult?.intentType === 'setup';
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -491,7 +545,11 @@ export function CheckoutPage() {
               {meta.label}
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold">
-              {step === 'free-success' ? 'You\'re all set!' : 'Complete your subscription'}
+              {step === 'free-success'
+                ? "You're all set!"
+                : step === 'payment' && isTrial
+                ? 'Start your 7-day free trial'
+                : 'Complete your subscription'}
             </h1>
           </div>
 
