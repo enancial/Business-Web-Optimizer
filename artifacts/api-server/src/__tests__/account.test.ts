@@ -375,6 +375,23 @@ describe('POST /api/account/re-issue-token', () => {
     const nowSec = Math.floor(Date.now() / 1000);
     expect(payload.exp - nowSec).toBeGreaterThan(30 * 24 * 3600 - 60);
   });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/re-issue-token')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -419,6 +436,40 @@ describe('POST /api/account/cancel', () => {
       expect.objectContaining({ cancel_at_period_end: true }),
     );
   });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/cancel')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.update hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.update.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(makeActiveSub()), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/cancel')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -444,6 +495,40 @@ describe('POST /api/account/uncancel', () => {
       TEST_SUB_ID,
       expect.objectContaining({ cancel_at_period_end: false }),
     );
+  });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/uncancel')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.update hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.update.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(makeActiveSub()), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/uncancel')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
   });
 });
 
@@ -531,6 +616,42 @@ describe('POST /api/account/change-plan', () => {
       }),
     );
   });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/change-plan')
+        .set('Authorization', `Bearer ${makePaidToken()}`)
+        .send({ plan: 'optimizer-pro' });
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.update hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.update.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(makeActiveSub()), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/change-plan')
+        .set('Authorization', `Bearer ${makePaidToken()}`)
+        .send({ plan: 'optimizer-pro' });
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -560,5 +681,126 @@ describe('POST /api/account/update-payment', () => {
     expect(stripe.setupIntents.create).toHaveBeenCalledWith(
       expect.objectContaining({ customer: TEST_CUSTOMER_ID }),
     );
+  });
+
+  it('returns 502 and responds promptly when setupIntents.create hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.setupIntents.create.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ client_secret: 'seti_test_secret' }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/update-payment')
+        .set('Authorization', `Bearer ${makePaidToken()}`);
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/account/set-default-payment
+// ---------------------------------------------------------------------------
+
+describe('POST /api/account/set-default-payment', () => {
+  it('returns 401 without a token', async () => {
+    const res = await request(app).post('/api/account/set-default-payment');
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 when paymentMethodId is missing', async () => {
+    const res = await request(app)
+      .post('/api/account/set-default-payment')
+      .set('Authorization', `Bearer ${makePaidToken()}`)
+      .send({});
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when paymentMethodId does not start with pm_', async () => {
+    const res = await request(app)
+      .post('/api/account/set-default-payment')
+      .set('Authorization', `Bearer ${makePaidToken()}`)
+      .send({ paymentMethodId: 'card_invalid' });
+    expect(res.status).toBe(400);
+  });
+
+  it('attaches PM, updates customer default, and updates active subscription', async () => {
+    const res = await request(app)
+      .post('/api/account/set-default-payment')
+      .set('Authorization', `Bearer ${makePaidToken()}`)
+      .send({ paymentMethodId: 'pm_new_card' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(stripe.paymentMethods.attach).toHaveBeenCalledWith(
+      'pm_new_card',
+      expect.objectContaining({ customer: TEST_CUSTOMER_ID }),
+    );
+    expect(stripe.customers.update).toHaveBeenCalledWith(
+      TEST_CUSTOMER_ID,
+      expect.objectContaining({
+        invoice_settings: { default_payment_method: 'pm_new_card' },
+      }),
+    );
+    expect(stripe.subscriptions.update).toHaveBeenCalledWith(
+      TEST_SUB_ID,
+      expect.objectContaining({ default_payment_method: 'pm_new_card' }),
+    );
+  });
+
+  it('returns 502 and responds promptly when customers.update hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.customers.update.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({}), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/set-default-payment')
+        .set('Authorization', `Bearer ${makePaidToken()}`)
+        .send({ paymentMethodId: 'pm_new_card' });
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/set-default-payment')
+        .set('Authorization', `Bearer ${makePaidToken()}`)
+        .send({ paymentMethodId: 'pm_new_card' });
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.update hangs', async () => {
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+    try {
+      stripe.subscriptions.update.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve(makeActiveSub()), 200)),
+      );
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/set-default-payment')
+        .set('Authorization', `Bearer ${makePaidToken()}`)
+        .send({ paymentMethodId: 'pm_new_card' });
+      expect(res.status).toBe(502);
+      expect(Date.now() - start).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
   });
 });

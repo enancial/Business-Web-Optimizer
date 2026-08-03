@@ -355,11 +355,20 @@ router.post('/account/re-issue-token', async (req, res): Promise<void> => {
   if (!auth) return;
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
 
-  const subs = await stripe.subscriptions.list({
-    customer: auth.customerId,
-    limit: 3,
-  });
+  let subs: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    subs = await withTimeout(
+      stripe.subscriptions.list({ customer: auth.customerId, limit: 3 }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 're-issue-token: subscriptions.list failed');
+    res.status(502).json({ error: 'Could not verify subscription. Please try again.' });
+    return;
+  }
+
   const activeSub = getActiveSub(subs.data);
   if (!activeSub) {
     res.status(403).json({ error: 'No active subscription found.' });
@@ -384,11 +393,20 @@ router.post('/account/cancel', async (req, res): Promise<void> => {
   if (!auth) return;
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
 
-  const subs = await stripe.subscriptions.list({
-    customer: auth.customerId,
-    limit: 3,
-  });
+  let subs: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    subs = await withTimeout(
+      stripe.subscriptions.list({ customer: auth.customerId, limit: 3 }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'cancel: subscriptions.list failed');
+    res.status(502).json({ error: 'Could not retrieve subscription. Please try again.' });
+    return;
+  }
+
   const activeSub = getActiveSub(subs.data);
 
   if (!activeSub) {
@@ -401,9 +419,17 @@ router.post('/account/cancel', async (req, res): Promise<void> => {
     return;
   }
 
-  const updated = await stripe.subscriptions.update(activeSub.id, {
-    cancel_at_period_end: true,
-  });
+  let updated: Stripe.Subscription;
+  try {
+    updated = await withTimeout(
+      stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: true }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'cancel: subscriptions.update failed');
+    res.status(502).json({ error: 'Could not cancel subscription. Please try again.' });
+    return;
+  }
 
   req.log.info({ subscriptionId: activeSub.id, cancelAt: updated.cancel_at }, 'Subscription cancel-at-period-end set');
   res.json({ cancelAt: updated.cancel_at, cancelAtPeriodEnd: updated.cancel_at_period_end });
@@ -419,17 +445,37 @@ router.post('/account/uncancel', async (req, res): Promise<void> => {
   if (!auth) return;
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
 
-  const subs = await stripe.subscriptions.list({ customer: auth.customerId, limit: 3 });
+  let subs: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    subs = await withTimeout(
+      stripe.subscriptions.list({ customer: auth.customerId, limit: 3 }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'uncancel: subscriptions.list failed');
+    res.status(502).json({ error: 'Could not retrieve subscription. Please try again.' });
+    return;
+  }
+
   const activeSub = getActiveSub(subs.data);
   if (!activeSub) {
     res.status(404).json({ error: 'No subscription found.' });
     return;
   }
 
-  const updated = await stripe.subscriptions.update(activeSub.id, {
-    cancel_at_period_end: false,
-  });
+  let updated: Stripe.Subscription;
+  try {
+    updated = await withTimeout(
+      stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: false }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'uncancel: subscriptions.update failed');
+    res.status(502).json({ error: 'Could not restore subscription. Please try again.' });
+    return;
+  }
 
   res.json({ cancelAtPeriodEnd: updated.cancel_at_period_end });
 });
@@ -460,8 +506,20 @@ router.post('/account/change-plan', async (req, res): Promise<void> => {
   }
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
 
-  const subs = await stripe.subscriptions.list({ customer: auth.customerId, limit: 3 });
+  let subs: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    subs = await withTimeout(
+      stripe.subscriptions.list({ customer: auth.customerId, limit: 3 }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'change-plan: subscriptions.list failed');
+    res.status(502).json({ error: 'Could not retrieve subscription. Please try again.' });
+    return;
+  }
+
   const activeSub = getActiveSub(subs.data);
 
   if (!activeSub) {
@@ -481,10 +539,19 @@ router.post('/account/change-plan', async (req, res): Promise<void> => {
     return;
   }
 
-  await stripe.subscriptions.update(activeSub.id, {
-    items: [{ id: itemId, price: newPriceId }],
-    proration_behavior: 'always_invoice',
-  });
+  try {
+    await withTimeout(
+      stripe.subscriptions.update(activeSub.id, {
+        items: [{ id: itemId, price: newPriceId }],
+        proration_behavior: 'always_invoice',
+      }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'change-plan: subscriptions.update failed');
+    res.status(502).json({ error: 'Could not update plan. Please try again.' });
+    return;
+  }
 
   // Issue a new token with the updated plan
   const newToken = issueToken({ tier: 'paid', customerId: auth.customerId, product: plan });
@@ -503,12 +570,23 @@ router.post('/account/update-payment', async (req, res): Promise<void> => {
   if (!auth) return;
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
   const publishableKey = await getStripePublishableKey();
 
-  const intent = await stripe.setupIntents.create({
-    customer: auth.customerId,
-    automatic_payment_methods: { enabled: true },
-  });
+  let intent: Stripe.SetupIntent;
+  try {
+    intent = await withTimeout(
+      stripe.setupIntents.create({
+        customer: auth.customerId,
+        automatic_payment_methods: { enabled: true },
+      }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'update-payment: setupIntents.create failed');
+    res.status(502).json({ error: 'Could not create payment setup. Please try again.' });
+    return;
+  }
 
   res.json({ clientSecret: intent.client_secret, publishableKey });
 });
@@ -529,26 +607,59 @@ router.post('/account/set-default-payment', async (req, res): Promise<void> => {
   }
 
   const stripe = await getUncachableStripeClient();
+  const timeoutMs = getAuthStripeTimeoutMs();
 
   // Attach to customer if not already attached
   try {
-    await stripe.paymentMethods.attach(paymentMethodId, { customer: auth.customerId });
+    await withTimeout(
+      stripe.paymentMethods.attach(paymentMethodId, { customer: auth.customerId }),
+      timeoutMs,
+    );
   } catch {
     // May already be attached — continue
   }
 
   // Set as default for future invoices
-  await stripe.customers.update(auth.customerId, {
-    invoice_settings: { default_payment_method: paymentMethodId },
-  });
+  try {
+    await withTimeout(
+      stripe.customers.update(auth.customerId, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'set-default-payment: customers.update failed');
+    res.status(502).json({ error: 'Could not update payment method. Please try again.' });
+    return;
+  }
 
   // Also update the active subscription's default PM
-  const subs = await stripe.subscriptions.list({ customer: auth.customerId, limit: 3 });
+  let subs: Stripe.ApiList<Stripe.Subscription>;
+  try {
+    subs = await withTimeout(
+      stripe.subscriptions.list({ customer: auth.customerId, limit: 3 }),
+      timeoutMs,
+    );
+  } catch (err) {
+    req.log.error({ err }, 'set-default-payment: subscriptions.list failed');
+    res.status(502).json({ error: 'Could not update payment method. Please try again.' });
+    return;
+  }
+
   const activeSub = getActiveSub(subs.data);
   if (activeSub) {
-    await stripe.subscriptions.update(activeSub.id, {
-      default_payment_method: paymentMethodId,
-    });
+    try {
+      await withTimeout(
+        stripe.subscriptions.update(activeSub.id, {
+          default_payment_method: paymentMethodId,
+        }),
+        timeoutMs,
+      );
+    } catch (err) {
+      req.log.error({ err }, 'set-default-payment: subscriptions.update failed');
+      res.status(502).json({ error: 'Could not update payment method. Please try again.' });
+      return;
+    }
   }
 
   req.log.info({ customerId: auth.customerId, paymentMethodId }, 'Default payment method updated');
