@@ -187,7 +187,7 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
           </Button>
 
           <p className="text-xs text-gray-400 text-center mt-4">
-            Only paid Optimizer or Optimizer Pro subscribers can sign in.
+            Enter the email you used to start your free trial or subscription.
           </p>
         </form>
 
