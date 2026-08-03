@@ -348,21 +348,100 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
         </div>
       </div>
 
-      {/* Commission info */}
-      <div className="bg-[#1A3A7A]/5 border border-[#1A3A7A]/20 rounded-2xl p-5">
-        <h2 className="font-semibold text-[#1A3A7A] mb-2">Commission details</h2>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• <strong>30%</strong> of each invoice paid by your referrals</li>
-          <li>• Applies for the <strong>first 12 months</strong> of each referred subscription</li>
-          <li>• Payouts are processed monthly via PayPal — minimum $50 threshold</li>
-          {affiliate.paypalEmail ? (
-            <li>• Payout email: <strong>{affiliate.paypalEmail}</strong></li>
-          ) : (
-            <li className="text-amber-600">• ⚠ No payout email set — contact us to add your PayPal email</li>
-          )}
-        </ul>
+      {/* Commission info + PayPal payout email */}
+      <div className="bg-[#1A3A7A]/5 border border-[#1A3A7A]/20 rounded-2xl p-5 space-y-4">
+        <div>
+          <h2 className="font-semibold text-[#1A3A7A] mb-2">Commission details</h2>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>• <strong>30%</strong> of each invoice paid by your referrals</li>
+            <li>• Applies for the <strong>first 12 months</strong> of each referred subscription</li>
+            <li>• Payouts are processed monthly via PayPal — minimum $50 threshold</li>
+          </ul>
+        </div>
+
+        <PayPalEmailForm
+          token={token}
+          initialEmail={affiliate.paypalEmail}
+        />
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// PayPal payout email inline edit form
+// ---------------------------------------------------------------------------
+
+function PayPalEmailForm({
+  token,
+  initialEmail,
+}: {
+  token: string;
+  initialEmail: string | null;
+}) {
+  const [email, setEmail] = useState(initialEmail ?? '');
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSuccess(false);
+    setError(null);
+    try {
+      await apiFetch('/affiliates/me', {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ paypalEmail: email }),
+      });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSave} className="space-y-2">
+      <Label htmlFor="paypal-email" className="text-sm font-medium text-[#1A3A7A]">
+        Payout email (PayPal)
+      </Label>
+      {!initialEmail && (
+        <p className="text-xs text-amber-600">
+          ⚠ No payout email set — add your PayPal email below so we can pay you.
+        </p>
+      )}
+      <div className="flex gap-2">
+        <Input
+          id="paypal-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="payments@example.com"
+          className="bg-white/70 text-sm"
+          required
+        />
+        <Button
+          type="submit"
+          disabled={saving}
+          size="sm"
+          className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white shrink-0"
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+      {success && (
+        <p className="text-xs text-green-700 flex items-center gap-1">
+          <CheckCircle2 className="h-3 w-3" /> Payout email updated.
+        </p>
+      )}
+      {error && (
+        <p className="text-xs text-red-600">{error}</p>
+      )}
+    </form>
   );
 }
 

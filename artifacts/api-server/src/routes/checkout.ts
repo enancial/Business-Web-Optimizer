@@ -231,15 +231,38 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
 
   // ── Affiliate code validation ────────────────────────────────────────────
   // Silently ignore invalid codes so existing checkout flow is never blocked.
+  // A slow or failing DB will NOT block checkout — a 2 s timeout + try/catch
+  // ensures any DB trouble results only in no affiliate credit, never a failed
+  // checkout for the customer.
   let validatedAffiliateCode: string | null = null;
   if (typeof affiliateCode === 'string' && affiliateCode.trim()) {
     const code = affiliateCode.trim().toUpperCase();
-    const [aff] = await db
-      .select({ code: affiliates.code })
-      .from(affiliates)
-      .where(and(eq(affiliates.code, code), eq(affiliates.active, true)))
-      .limit(1);
-    if (aff) validatedAffiliateCode = aff.code;
+    try {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Affiliate DB lookup timed out after 2 s')),
+          2000,
+        ),
+      );
+      const rows = await Promise.race([
+        db
+          .select({ code: affiliates.code })
+          .from(affiliates)
+          .where(and(eq(affiliates.code, code), eq(affiliates.active, true)))
+          .limit(1),
+        timeout,
+      ]);
+      if (rows[0]) validatedAffiliateCode = rows[0].code;
+    } catch (err) {
+      req.log.warn(
+        {
+          err: err instanceof Error ? err.message : String(err),
+          affiliateCode: code,
+        },
+        'Affiliate DB lookup failed or timed out — checkout proceeds without affiliate credit',
+      );
+      // validatedAffiliateCode stays null; checkout proceeds normally
+    }
   }
 
   // ── Free order ($0 after discount) ────────────────────────────────────────

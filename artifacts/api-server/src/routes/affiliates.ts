@@ -362,6 +362,43 @@ router.get(
 );
 
 // ---------------------------------------------------------------------------
+// PATCH /api/affiliates/me  (auth required) — update PayPal payout email
+// ---------------------------------------------------------------------------
+
+router.patch(
+  '/affiliates/me',
+  requireAffiliateAuth,
+  async (req, res): Promise<void> => {
+    const affiliateId = (req as AuthedRequest).affiliateId;
+    const { paypalEmail } = req.body as { paypalEmail?: unknown };
+
+    if (typeof paypalEmail !== 'string' || !paypalEmail.trim()) {
+      res.status(400).json({ error: 'paypalEmail is required.' });
+      return;
+    }
+
+    const email = paypalEmail.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(422).json({ error: 'Invalid email address format.' });
+      return;
+    }
+
+    const [updated] = await db
+      .update(affiliates)
+      .set({ paypalEmail: email })
+      .where(eq(affiliates.id, affiliateId))
+      .returning({ id: affiliates.id, paypalEmail: affiliates.paypalEmail });
+
+    if (!updated) {
+      res.status(404).json({ error: 'Affiliate not found.' });
+      return;
+    }
+
+    res.json({ success: true, paypalEmail: updated.paypalEmail });
+  },
+);
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

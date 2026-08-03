@@ -1,0 +1,89 @@
+Implement tasks #13, #11, and #12 for the affiliate system, in this order. Do not change existing pricing, plans, or core checkout logic beyond what’s required for these tasks. Keep changes minimal, robust, and consistent with the current code style. All existing tests must continue to pass.
+
+## Task #13 — Prevent affiliate tracking from breaking checkout when the database is slow
+
+In `artifacts/api-server/src/routes/checkout.ts`:
+
+- Wrap the affiliate DB lookup (the block that validates `affiliateCode` against the `affiliates` table) in a `try/catch`.
+- Add a short timeout (e.g. 2 seconds) using `Promise.race` or an equivalent pattern so the DB query cannot block the request indefinitely.
+- On error or timeout:
+  - Log a warning so the issue is visible in server logs.
+  - Set `validatedAffiliateCode = null` and allow checkout to proceed normally (no affiliate credit, but no user impact).
+
+Requirements:
+- Do not change any successful-path behavior.
+- Do not change the response shape for the frontend.
+- Keep the change minimal and focused on robustness.
+
+After implementing:
+- Confirm that existing tests still pass.
+- Confirm in a comment that a slow or failing DB will no longer block or break checkout for non‑affiliated users.
+
+Wait for this task to fully complete and tests to pass before moving on to Task #11.
+
+---
+
+## Task #11 — End‑to‑end tests for the full affiliate referral flow
+
+Add Vitest/Playwright tests that cover the integrated path:
+
+- Affiliate signup → unique code generated and stored.
+- Checkout with `?ref=CODE` → `affiliate_code` written into PaymentIntent metadata.
+- `payment_intent.succeeded` webhook → `affiliate_conversions` row created with correct plan and `commission_rate = 0.30`.
+- `invoice.paid` webhook → `affiliate_earnings` row created with:
+  - `commission_cents = 30%` of invoice amount.
+  - Correct `period_month` / `period_year`.
+- 12‑month window enforcement:
+  - Simulate an invoice after 12 months → no new `affiliate_earnings` row.
+- `customer.subscription.deleted` webhook → `affiliate_conversions.status` set to `canceled`, no further earnings accrue.
+
+Use the existing test setup and patterns in:
+
+- `artifacts/api-server/src/__tests__/webhook.test.ts`
+- `artifacts/api-server/src/routes/affiliates.ts`
+- `artifacts/api-server/src/routes/adminAffiliates.ts`
+- `artifacts/api-server/src/lib/subscriptionWebhook.ts`
+
+Requirements:
+
+- All existing tests (including those from Task #13) must still pass.
+- New tests should run in the same test suite.
+- Tests should be deterministic and not depend on real time; mock dates as needed to test the 12‑month rule.
+
+Wait for this task to fully complete and all tests to pass before moving on to Task #12.
+
+---
+
+## Task #12 — Let affiliates update their PayPal payout email from their dashboard
+
+Backend:
+
+- In `artifacts/api-server/src/routes/affiliates.ts`, add an authenticated endpoint:
+  - `PATCH /api/affiliates/me`
+  - Accepts `{ paypalEmail: string }`.
+  - Validates email format.
+  - Updates the `paypal_email` field for the authenticated affiliate.
+  - Returns the updated affiliate record or a simple success response.
+
+Frontend:
+
+- In `artifacts/businesswebdev/src/pages/AffiliateDashboardPage.tsx`:
+  - Add a small form or inline editable field for “Payout email (PayPal)” under the commission details.
+  - Pre‑fill with the current `paypal_email` if present.
+  - Show a save button and a simple success/error message after updating.
+  - Replace the existing “⚠ No payout email set — contact us…” warning with this edit UI when the field is empty, so affiliates can add it directly.
+
+Requirements:
+
+- Use the existing auth (affiliate JWT) for the endpoint.
+- Keep the UI consistent with the current dashboard style.
+- Handle validation errors (invalid email) gracefully.
+
+After all three tasks are complete:
+
+- Confirm that all tests pass.
+- Briefly list the new/changed files and endpoints.
+- Confirm that:
+  - Checkout is now resilient to slow/failing affiliate DB lookups.
+  - The full affiliate flow is covered by end‑to‑end tests.
+  - Affiliates can update their PayPal email from their dashboard.
