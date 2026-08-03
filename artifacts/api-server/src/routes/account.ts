@@ -83,6 +83,36 @@ function getHintTimeoutMs(): number {
   return Number.isFinite(override) && override > 0 ? override : 2500;
 }
 
+/**
+ * Maximum ms to wait for the primary Stripe calls in the auth handler (customer
+ * search and subscription list).  Overridable via AUTH_STRIPE_TIMEOUT_MS so tests
+ * can inject a short value without fake timers.
+ */
+function getAuthStripeTimeoutMs(): number {
+  const override = Number(process.env.AUTH_STRIPE_TIMEOUT_MS);
+  return Number.isFinite(override) && override > 0 ? override : 2500;
+}
+
+/**
+ * Races a promise against a timeout.  Throws a TimeoutError if the timeout
+ * fires first so callers can distinguish it from ordinary Stripe errors.
+ */
+class TimeoutError extends Error {
+  constructor(ms: number) {
+    super(`Stripe call timed out after ${ms} ms`);
+    this.name = 'TimeoutError';
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new TimeoutError(ms)), ms),
+    ),
+  ]);
+}
+
 const router: IRouter = Router();
 
 // ---------------------------------------------------------------------------
@@ -125,14 +155,18 @@ router.post('/account/auth', async (req, res): Promise<void> => {
   }
 
   const stripe = await getUncachableStripeClient();
+  const authTimeoutMs = getAuthStripeTimeoutMs();
 
   // Search Stripe for customers with this email
   let customers: Stripe.ApiSearchResult<Stripe.Customer>;
   try {
-    customers = await stripe.customers.search({
-      query: `email:"${email.toLowerCase().trim()}"`,
-      limit: 5,
-    });
+    customers = await withTimeout(
+      stripe.customers.search({
+        query: `email:"${email.toLowerCase().trim()}"`,
+        limit: 5,
+      }),
+      authTimeoutMs,
+    );
   } catch (err) {
     req.log.error({ err }, 'Stripe customer search failed');
     res.status(502).json({ error: 'Could not verify your account. Please try again.' });
@@ -160,11 +194,21 @@ router.post('/account/auth', async (req, res): Promise<void> => {
   let foundInactiveOptimizerSub = false;
 
   for (const customer of customers.data) {
-    const subs = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'all',
-      limit: 10,
-    });
+    let subs: Stripe.ApiList<Stripe.Subscription>;
+    try {
+      subs = await withTimeout(
+        stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'all',
+          limit: 10,
+        }),
+        authTimeoutMs,
+      );
+    } catch (err) {
+      req.log.error({ err }, 'Stripe subscriptions list failed');
+      res.status(502).json({ error: 'Could not verify your account. Please try again.' });
+      return;
+    }
 
     const isOptimizerSub = (s: Stripe.Subscription) =>
       s.items.data.some(

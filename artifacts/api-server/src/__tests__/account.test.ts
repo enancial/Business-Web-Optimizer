@@ -209,6 +209,58 @@ describe('POST /api/account/auth', () => {
     const payload = decodeToken(res.body.token);
     expect(payload.product).toBe('optimizer-pro');
   });
+
+  // -------------------------------------------------------------------------
+  // Timeout guard: primary Stripe calls must not hang the server
+  // -------------------------------------------------------------------------
+
+  it('returns 502 and responds promptly when the primary customers.search hangs', async () => {
+    // Use a very short timeout so the test completes quickly
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+
+    try {
+      // customers.search resolves only after 200 ms — past the 50 ms timeout
+      stripe.customers.search.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/auth')
+        .send({ email: 'test@example.com' });
+      const elapsed = Date.now() - start;
+
+      expect(res.status).toBe(502);
+      // Should resolve well before the 200 ms mock delay (timeout fired first)
+      expect(elapsed).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
+
+  it('returns 502 and responds promptly when subscriptions.list hangs', async () => {
+    // customer found, but subscriptions.list never returns within timeout
+    process.env.AUTH_STRIPE_TIMEOUT_MS = '50';
+
+    try {
+      // customers.search resolves immediately with a matching customer
+      // subscriptions.list resolves only after 200 ms — past the 50 ms timeout
+      stripe.subscriptions.list.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve({ data: [] }), 200)),
+      );
+
+      const start = Date.now();
+      const res = await request(app)
+        .post('/api/account/auth')
+        .send({ email: 'test@example.com' });
+      const elapsed = Date.now() - start;
+
+      expect(res.status).toBe(502);
+      expect(elapsed).toBeLessThan(180);
+    } finally {
+      delete process.env.AUTH_STRIPE_TIMEOUT_MS;
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------
