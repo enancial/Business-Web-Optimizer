@@ -17,6 +17,8 @@ import { AccountPage } from '@/pages/AccountPage';
 import { AffiliateJoinPage } from '@/pages/AffiliateJoinPage';
 import { AffiliateDashboardPage } from '@/pages/AffiliateDashboardPage';
 import { AdminPayoutsPage } from '@/pages/AdminPayoutsPage';
+import { AffiliatesPage } from '@/pages/AffiliatesPage';
+import { PartnersPage } from '@/pages/PartnersPage';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ function App() {
             <Route path="/admin/affiliate-payouts" component={AdminPayoutsPage} />
             <Route path="/affiliates/dashboard" component={AffiliateDashboardPage} />
             <Route path="/affiliates/join" component={AffiliateJoinPage} />
+            <Route path="/affiliates" component={AffiliatesPage} />
+            <Route path="/partners" component={PartnersPage} />
             <Route path="/account" component={AccountPage} />
             <Route path="/success" component={Success} />
             <Route path="/cancel" component={Cancel} />

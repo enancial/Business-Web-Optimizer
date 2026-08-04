@@ -53,7 +53,7 @@ export function Footer() {
           </div>
 
           {/* Links */}
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             <a
               href="#pricing"
               className="text-sm text-white/60 hover:text-white transition-colors"
@@ -67,6 +67,20 @@ export function Footer() {
               data-testid="link-footer-optimizer-tool"
             >
               Run a Scan
+            </a>
+            <a
+              href="/affiliates"
+              className="text-sm text-white/60 hover:text-white transition-colors"
+              data-testid="link-footer-affiliates"
+            >
+              Affiliates
+            </a>
+            <a
+              href="/partners"
+              className="text-sm text-white/60 hover:text-white transition-colors"
+              data-testid="link-footer-partners"
+            >
+              Partners
             </a>
             <a
               href="#faq"

@@ -1,0 +1,200 @@
+Add two new marketing pages (“Affiliates” and “Partners”) to the Business Web Optimizer site, and update the global footer links. Use the existing design system, routing, and styling. Do not change any existing pages other than the footer.
+
+Goals:
+- Create a dedicated affiliate program landing page at /affiliates.
+- Create a “For Agencies & Partners” page at /partners.
+- Update the global footer to include links to these pages.
+- Keep all copy, pricing, and trial messaging consistent with our current Optimizer positioning (Free / Optimizer / Optimizer Pro, 7‑day free trial with card, $29/mo and $79/mo).
+
+New pages to create:
+
+1. /affiliates — Affiliate Program Landing Page
+
+Use the following content exactly (adjust only for our actual component structure and styling):
+
+Headline:
+“Business Web Optimizer Affiliate Program”
+
+Subheadline:
+“Earn 30% recurring commissions for every customer you refer — for their first 12 months.”
+
+Section: “What is the Optimizer affiliate program?”
+Copy:
+“If you recommend tools to founders, agencies, or anyone running a website, you can earn 30% recurring commissions for every subscriber you refer to Business Web Optimizer — for their first 12 months.
+
+Optimizer helps founders and small teams automatically audit and improve their websites’ performance, SEO, and accessibility. Users get a clear, prioritized list of fixes in under 60 seconds, plus ongoing tracking and recommendations.
+
+You handle the recommendation; we handle the tracking, reporting, and payouts.”
+
+Section: “Who this is for”
+Bullets:
+- “Agencies and consultants who recommend tools to clients”
+- “Developers, marketers, and designers with an audience or network”
+- “Content creators, newsletter authors, and community leaders in the founder/SMB space”
+Closing line:
+“If you regularly suggest software or services to people running websites, this program is designed for you.”
+
+Section: “How it works”
+Numbered list:
+1. “Sign up using the form below.”
+2. “Get your unique referral links for: Optimizer ($29/mo) and Optimizer Pro ($79/mo).”
+3. “Share your links in your content, emails, social posts, or 1:1 recommendations. Ready‑to‑use copy and banners are available in your dashboard.”
+4. “Track your referrals, conversions, and earnings in real time.”
+5. “Get paid monthly via PayPal or bank transfer (minimum $50).”
+Closing line:
+“Commissions are 30% of net revenue per invoice, for the first 12 months per referred subscriber.”
+
+Section: “What you’ll earn”
+Bullets:
+- “30% recurring commission on every referred Optimizer or Optimizer Pro subscriber.”
+- “Applies to: Optimizer at twenty‑nine dollars per month; Optimizer Pro at seventy‑nine dollars per month.”
+- “Commissions accrue for the first 12 months of each subscriber’s lifetime.”
+- “Monthly payouts once your unpaid balance reaches at least fifty dollars.”
+Example paragraph:
+“If you refer 10 Optimizer subscribers who stay active, you could earn roughly $87 per month in recurring commissions. With 10 Optimizer Pro subscribers, that could be around $237 per month. Actual earnings depend on conversions and churn.”
+
+Section: “What affiliates get”
+Bullets:
+- “Unique referral links for Optimizer and Optimizer Pro”
+- “A live dashboard with: active referrals; total, current month, and unpaid earnings; paid earnings history”
+- “Promo materials: pre‑written copy for emails and social posts; banner templates and text snippets”
+- “Monthly payouts via PayPal or bank transfer (minimum $50)”
+- “The ability to update your payout email directly from your dashboard”
+
+Section: “Frequently asked questions”
+Q&A:
+- Q: “When do I get paid?”  
+  A: “Monthly, once your unpaid commissions reach at least $50. Payouts are processed after the end of each month.”
+- Q: “How are referrals tracked?”  
+  A: “Via your unique referral link. We track signups and subscriptions automatically and attribute commissions to your account.”
+- Q: “Do I get credited for trials?”  
+  A: “Yes. When someone starts a 7‑day free trial through your link and later converts to a paid plan, you’re credited as the referring affiliate. Commissions accrue on paid invoices.”
+- Q: “Can I update my payout email?”  
+  A: “Yes. You can set or change your PayPal email from your affiliate dashboard at any time.”
+- Q: “Are there restrictions on how I can promote Optimizer?”  
+  A: “Affiliates must comply with our affiliate terms (no spam, no misleading claims, no unauthorized use of our brand in paid search, etc.). Full details are provided when you join.”
+
+Final CTA section:
+Primary button: “Join the affiliate program” → links to /affiliates/join  
+Secondary line: “Already an affiliate? Log in to your dashboard” → links to /affiliates/dashboard
+
+2. /partners — For Agencies & Partners
+
+Use the following content exactly (adjust only for our actual component structure and styling):
+
+Headline:
+“Optimizer for Agencies and Partners”
+
+Subheadline:
+“Use Optimizer internally for client audits, or recommend it to your network and earn recurring revenue.”
+
+Section: “Why agencies use Optimizer”
+Bullets:
+- “Audit client sites quickly: Run full scans across performance, SEO, and accessibility, then get a prioritized list of fixes you can act on immediately.”
+- “Show clear, measurable value: Use exportable PDF reports (including white‑label reports on Optimizer Pro) to show clients what’s wrong, what you’re fixing, and how things improve over time.”
+- “Standardize your optimization workflow: Make Optimizer part of your onboarding and ongoing maintenance process: scan at kickoff, re‑scan after changes, and track improvements monthly.”
+- “Automate monitoring with scheduled scans: On Optimizer Pro, set up automatic recurring scans so you’re alerted to new issues before your clients notice.”
+
+Section: “Plans that fit agency workflows”
+
+Free:
+- “Scan up to 5 pages, see top 3 issues.”
+- “Good for quick internal checks or small sites.”
+- “No credit card required.”
+
+Optimizer – $29/mo:
+- “Full site scan (no page limit).”
+- “20+ checks across performance, SEO, and accessibility.”
+- “Prioritized, actionable fix list.”
+- “Exportable PDF report.”
+- “Monthly re‑scan to track improvements over time.”
+- “Includes a 7‑day free trial (no charge today, cancel anytime before day 7).”
+
+Optimizer Pro – $79/mo:
+- “Everything in Optimizer, plus:”
+  - “Scheduled auto‑scans”
+  - “Competitor comparison”
+  - “White‑label PDF reports (your branding, client‑ready)”
+  - “API access (integrate scans into your own tools/workflows)”
+- “Includes a 7‑day free trial (no charge today, cancel anytime before day 7).”
+Closing line:
+“For agencies, Optimizer Pro is usually the best fit, especially if you manage multiple client sites or need white‑label reporting.”
+
+Section: “Two ways to work with us”
+
+Subsection: “1. Use Optimizer internally”
+Bullets:
+- “Sign up for an Optimizer or Optimizer Pro account.”
+- “Start a 7‑day free trial to test the full feature set.”
+- “Use scans and reports to: inform your proposals and roadmaps; demonstrate before/after improvements to clients; keep sites healthy with ongoing monitoring.”
+CTA button: “Start your 7‑day free trial” → link to / (homepage) or our main product/checkout entry point.
+
+Subsection: “2. Recommend Optimizer and earn commissions”
+Copy:
+“If you refer clients or peers to Optimizer, you can earn 30% recurring commissions for every subscriber you refer — for their first 12 months.
+
+Share your unique referral link with:
+- Existing clients who need ongoing optimization.
+- Prospects who aren’t a fit for your services but still need tooling.
+- Your audience via content, newsletters, or social posts.
+
+Affiliates get:
+- Unique referral links for Optimizer and Optimizer Pro.
+- A live dashboard with stats and earnings.
+- Monthly payouts via PayPal or bank transfer (minimum $50).”
+
+CTA button: “Become an affiliate” → links to /affiliates/join
+
+Section: “How agencies typically use Optimizer”
+Bullets:
+- “Pre‑sales & proposals: Run a quick scan on a prospect’s site to highlight concrete issues you can solve. Use the PDF report as part of your proposal.”
+- “Onboarding & audits: Run a full scan at project start. Prioritize fixes with your client and build a roadmap around them.”
+- “Ongoing monitoring: Use scheduled scans (Optimizer Pro) to catch new issues early and show continuous improvement in monthly reports.”
+- “White‑label client reporting: On Optimizer Pro, generate branded PDFs that look like they came directly from your agency.”
+
+Section: “Want to discuss agency use cases or volume?”
+Copy:
+“If you’re managing many client sites or want to explore deeper integration (e.g., API workflows, custom reporting), we’re happy to talk.”
+
+CTA button or link: “Contact us” → mailto:support@businessweboptimizer.com (or our existing contact form/calendar link if we have one; if unsure, use the mailto for now).
+
+3. Footer updates
+
+Current footer links:
+- Pricing
+- Run a Scan
+- FAQ
+- My Account
+
+Add two new links, in this order (example):
+
+- Pricing → /pricing (or current pricing route)
+- Run a Scan → / (or current scan entry route)
+- Affiliates → /affiliates
+- Partners → /partners
+- FAQ → /faq (or current FAQ route)
+- My Account → /account (or current account route)
+
+Label text must be exactly:
+- “Pricing”
+- “Run a Scan”
+- “Affiliates”
+- “Partners”
+- “FAQ”
+- “My Account”
+
+Keep the existing footer layout and styling; just add the two new links in a logical position (e.g., after “Run a Scan” or grouped with product/resources links).
+
+Implementation notes:
+
+- Use our existing page template, header, and footer components.
+- Ensure both pages are responsive and match current typography, spacing, and color usage.
+- Ensure internal links (/affiliates/join, /affiliates/dashboard, /, mailto:support@businessweboptimizer.com) work correctly.
+- Do not change any existing page content other than the footer links.
+- If we have a global nav, you do NOT need to add these pages there; footer only is fine for now.
+
+When done:
+
+- Confirm the URLs: /affiliates and /partners are live and reachable.
+- Confirm the footer shows all six links with correct labels and destinations.
+- Confirm there are no console errors or layout regressions on desktop and mobile.
