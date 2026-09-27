@@ -2,11 +2,12 @@
 
 Business Web Optimizer runs on Cloudflare as Worker `business-web-optimizer-app` with D1 database `business-web-optimizer-db`.
 
-The Worker config is intentionally workers.dev-only. It does not attach `businessweboptimizer.com`, set routes, change DNS, or touch the existing `business-web-optimizer` Worker. The custom domain is attached later by the cutover owner after workers.dev verification.
+`businessweboptimizer.com` is attached to this Worker as a Workers Custom Domain (id `ce7e3127…`), cut over 2026-09-27 from the old GrowthSignal Worker `business-web-optimizer` with `override_existing_origin`. `www` 301s to the apex. The custom domain is managed through the Cloudflare API, not `wrangler.jsonc`, so a deploy does not change it. Rollback: PUT the same hostname back to service `business-web-optimizer` with `override_existing_origin: true`.
 
 ## Current deployment
 
 - Worker: `business-web-optimizer-app`
+- Production URL: `https://businessweboptimizer.com`
 - workers.dev URL: `https://business-web-optimizer-app.enancial.workers.dev`
 - D1 database: `business-web-optimizer-db`
 - D1 database ID: `29dc5ef0-d942-4228-adc8-10d7e8b504d4`
@@ -50,23 +51,23 @@ npx wrangler d1 execute business-web-optimizer-db --remote --file lib\db\drizzle
 
 Set secrets with `wrangler secret put`; never commit `.dev.vars` or secret values.
 
-Already set on the Worker:
+Set on the Worker:
 
 - `SESSION_SECRET`
 - `ADMIN_SECRET`
+- `STRIPE_SECRET_KEY` — dedicated restricted key `business-web-optimizer-app (2026-09-27)`, last 4 `okxv`. Write: Customers, Payment Intents, Payment Methods, Setup Intents, Customer Portal, Subscriptions. Read: Events, Products, Prices, Invoices, Promotion Codes, Coupons.
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET` — for endpoint `we_1UK72NJUmA42MDGcrlPx7A1i` → `https://businessweboptimizer.com/api/stripe/webhook` (payment_intent.succeeded, invoice.paid, customer.subscription.created/updated/deleted).
 
 Not set:
 
-- `STRIPE_SECRET_KEY`
-- `STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_WEBHOOK_SECRET`
 - `SMTP2GO_API_KEY`
 
-With Stripe unset, free scans work and paid checkout/billing routes return HTTP 503 with an explicit configuration error. SMTP2GO sender domain `businessweboptimizer.com` is verified, but a new send-only `/email/send` key could not be minted from the current account-wide API key; leave `SMTP2GO_API_KEY` unset until a suitable send-only key is available.
+SMTP2GO sender domain `businessweboptimizer.com` is verified, but a send-only `/email/send` key could not be minted from the account-wide API key, so emailed reports and affiliate codes stay off until one exists. Webhook verification uses `constructEventAsync`; the sync `constructEvent` throws on Workers.
 
 ## Verification checklist
 
-Use the workers.dev URL only:
+Verified 2026-09-27 on `https://businessweboptimizer.com`:
 
 - `/` returns the Business Web Optimizer SPA.
 - `/pricing` returns the SPA, not a 404.
