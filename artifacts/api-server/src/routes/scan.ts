@@ -217,7 +217,8 @@ function analyseHtml(html: string, url: string, fetchTimeMs: number): ScanResult
   // ── 4. Heading hierarchy ──────────────────────────────────────────────────
   const headingLevels: number[] = [];
   $('h1,h2,h3,h4,h5,h6').each((_, el) => {
-    headingLevels.push(parseInt((el as cheerio.Element & { name: string }).name.slice(1), 10));
+    const tagName = (el as unknown as { name?: string }).name ?? '';
+    headingLevels.push(parseInt(tagName.slice(1), 10));
   });
   let hierarchyBroken = false;
   for (let i = 1; i < headingLevels.length; i++) {

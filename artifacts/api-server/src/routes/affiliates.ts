@@ -307,7 +307,7 @@ router.get(
 
     const [conversionsRow] = await db
       .select({
-        count: sql<number>`COUNT(*)::int`,
+        count: sql<number>`COUNT(*)`,
       })
       .from(affiliateConversions)
       .where(
@@ -319,16 +319,16 @@ router.get(
 
     const [earningsRow] = await db
       .select({
-        total: sql<number>`COALESCE(SUM(${affiliateEarnings.commissionCents}), 0)::int`,
-        paid: sql<number>`COALESCE(SUM(CASE WHEN ${affiliateEarnings.paid} THEN ${affiliateEarnings.commissionCents} ELSE 0 END), 0)::int`,
-        unpaid: sql<number>`COALESCE(SUM(CASE WHEN NOT ${affiliateEarnings.paid} THEN ${affiliateEarnings.commissionCents} ELSE 0 END), 0)::int`,
+        total: sql<number>`COALESCE(SUM(${affiliateEarnings.commissionCents}), 0)`,
+        paid: sql<number>`COALESCE(SUM(CASE WHEN ${affiliateEarnings.paid} THEN ${affiliateEarnings.commissionCents} ELSE 0 END), 0)`,
+        unpaid: sql<number>`COALESCE(SUM(CASE WHEN NOT ${affiliateEarnings.paid} THEN ${affiliateEarnings.commissionCents} ELSE 0 END), 0)`,
       })
       .from(affiliateEarnings)
       .where(eq(affiliateEarnings.affiliateId, affiliateId));
 
     const [monthRow] = await db
       .select({
-        amount: sql<number>`COALESCE(SUM(${affiliateEarnings.commissionCents}), 0)::int`,
+        amount: sql<number>`COALESCE(SUM(${affiliateEarnings.commissionCents}), 0)`,
       })
       .from(affiliateEarnings)
       .where(

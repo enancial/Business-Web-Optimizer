@@ -19,9 +19,6 @@ export default defineConfig({
       OPTIMIZER_PRO_PRICE_ID: 'price_optimizer_pro_test',
       // Needed so routes/index doesn't throw on import
       PORT: '9999',
-      // Fake DATABASE_URL so @workspace/db can be imported in tests without
-      // throwing — no actual queries are made during the unit test suite.
-      DATABASE_URL: 'postgresql://localhost/bwo_test',
       // Admin secret for any future admin route tests
       ADMIN_SECRET: 'test-admin-secret-only',
     },

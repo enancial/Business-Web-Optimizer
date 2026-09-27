@@ -1,8 +1,5 @@
-import { runMigrations } from "stripe-replit-sync";
 import app from "./app";
 import { logger } from "./lib/logger";
-import { getStripeSync } from "./stripeClient";
-import { sendPendingTrialReminders } from "./lib/trialReminder";
 
 const rawPort = process.env["PORT"];
 
@@ -29,62 +26,3 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
 });
-
-// Initialize Stripe sync infrastructure in the background.
-async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
-  }
-
-  logger.info("Running Stripe schema migrations…");
-  await runMigrations({ databaseUrl });
-  logger.info("Stripe schema ready");
-
-  const stripeSync = await getStripeSync();
-
-  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
-  if (domain) {
-    const webhookUrl = `https://${domain}/api/stripe/webhook`;
-    logger.info({ webhookUrl }, "Registering Stripe webhook…");
-    await stripeSync.findOrCreateManagedWebhook(webhookUrl);
-    logger.info("Stripe webhook configured");
-  } else {
-    logger.warn("REPLIT_DOMAINS not set — skipping webhook registration");
-  }
-
-  // Sync existing Stripe data in the background (non-blocking)
-  stripeSync
-    .syncBackfill()
-    .then(() => logger.info("Stripe backfill complete"))
-    .catch((err) => logger.error({ err }, "Stripe backfill error"));
-}
-
-// ---------------------------------------------------------------------------
-// Trial reminder scheduler — runs every hour, sends "trial ends tomorrow" emails
-// ---------------------------------------------------------------------------
-
-const TRIAL_REMINDER_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
-
-function startTrialReminderScheduler() {
-  // Run once shortly after startup, then every hour
-  const runJob = () => {
-    sendPendingTrialReminders(logger).catch((err) =>
-      logger.error({ err }, "Trial reminder job failed"),
-    );
-  };
-
-  // Small initial delay so startup noise settles before the first run
-  setTimeout(() => {
-    runJob();
-    setInterval(runJob, TRIAL_REMINDER_INTERVAL_MS);
-  }, 30_000);
-
-  logger.info("Trial reminder scheduler started (interval: 1 hour)");
-}
-
-initStripe().catch((err) => {
-  logger.error({ err }, "Stripe initialization failed — checkout will be unavailable until restart");
-});
-
-startTrialReminderScheduler();

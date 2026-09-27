@@ -4,7 +4,7 @@
 // Each model/table should ideally be split into different files.
 // Each model/table should define a Drizzle table, insert schema, and types:
 //
-//   import { pgTable, text, serial } from "drizzle-orm/pg-core";
+//   import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 //   import { createInsertSchema } from "drizzle-zod";
 //   import { z } from "zod/v4";
 //

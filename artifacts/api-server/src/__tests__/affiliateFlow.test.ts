@@ -177,7 +177,7 @@ function makePaymentIntentEvent(
           product: 'optimizer',
           ...metadata,
         },
-      } as Stripe.PaymentIntent,
+      } as unknown as Stripe.PaymentIntent,
     },
   } as unknown as Stripe.Event;
 }
@@ -193,7 +193,7 @@ function makeInvoicePaidEvent(overrides: Partial<Stripe.Invoice> = {}): Stripe.E
         amount_paid: 2900,
         period_start: Math.floor(new Date('2026-08-01T00:00:00Z').getTime() / 1000),
         ...overrides,
-      } as Stripe.Invoice,
+      } as unknown as Stripe.Invoice,
     },
   } as unknown as Stripe.Event;
 }
@@ -207,7 +207,7 @@ function makeSubscriptionDeletedEvent(subscriptionId = 'sub_aff_test'): Stripe.E
         id: subscriptionId,
         status: 'canceled',
         items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
-      } as Stripe.Subscription,
+      } as unknown as Stripe.Subscription,
     },
   } as unknown as Stripe.Event;
 }
@@ -225,7 +225,7 @@ function makeSubscriptionCreatedEvent(
         customer: TEST_CUSTOMER_ID,
         metadata: overrides.metadata ?? {},
         items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
-      } as Stripe.Subscription,
+      } as unknown as Stripe.Subscription,
     },
   } as unknown as Stripe.Event;
 }
