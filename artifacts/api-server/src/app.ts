@@ -36,7 +36,8 @@ app.post(
       }
 
       const stripe = await getUncachableStripeClient();
-      event = stripe.webhooks.constructEvent(
+      // Workers only expose async SubtleCrypto, so the sync verifier throws there.
+      event = await stripe.webhooks.constructEventAsync(
         req.body as Buffer,
         Array.isArray(sig) ? sig[0] : sig,
         webhookSecret,
