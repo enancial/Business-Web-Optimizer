@@ -58,12 +58,11 @@ Set on the Worker:
 - `STRIPE_SECRET_KEY` — dedicated restricted key `business-web-optimizer-app (2026-09-27)`, last 4 `okxv`. Write: Customers, Payment Intents, Payment Methods, Setup Intents, Customer Portal, Subscriptions. Read: Events, Products, Prices, Invoices, Promotion Codes, Coupons.
 - `STRIPE_PUBLISHABLE_KEY`
 - `STRIPE_WEBHOOK_SECRET` — for endpoint `we_1UK72NJUmA42MDGcrlPx7A1i` → `https://businessweboptimizer.com/api/stripe/webhook` (payment_intent.succeeded, invoice.paid, customer.subscription.created/updated/deleted).
+- `SMTP2GO_API_KEY` — dedicated key `business-web-optimizer-app (Cloudflare) 2026-09-27`, last 4 `F919`, scoped to `/email/batch` only.
 
-Not set:
+All mail goes through `src/lib/smtp2go.ts`, which calls `/v3/email/batch` with the key in the `X-Smtp2go-Api-Key` header. The account-wide key can mint `/email/batch` keys but not `/email/send` keys, which is why the code doesn't use `/email/send`. A send only counts as successful when SMTP2GO returns an `email_id`; an HTTP 200 without one is a failure. A newly minted key answered "API User … not found" for its first few minutes and then worked, so test a fresh key again before you replace it. Sender domain `businessweboptimizer.com` is verified.
 
-- `SMTP2GO_API_KEY`
-
-SMTP2GO sender domain `businessweboptimizer.com` is verified, but a send-only `/email/send` key could not be minted from the account-wide API key, so emailed reports and affiliate codes stay off until one exists. Webhook verification uses `constructEventAsync`; the sync `constructEvent` throws on Workers.
+Webhook verification uses `constructEventAsync`, because the sync `constructEvent` throws on Workers.
 
 ## Verification checklist
 
@@ -76,6 +75,7 @@ Verified 2026-09-27 on `https://businessweboptimizer.com`:
 - `GET /api/checkout-config` returns the live publishable key.
 - `POST /api/validate-promo` with a real code returns `valid: true` and live price amounts.
 - `POST /api/stripe/webhook` with a forged signature returns 400 "No signatures found".
+- `POST /api/send-report` to `enancial@gmail.com` returns `{"sent":true}`. SMTP2GO logged the message as `delivered`, and it arrived in the Gmail inbox, not spam.
 - `/robots.txt` on workers.dev returns `Disallow: /`.
 - `/sitemap.xml` on workers.dev returns 404.
 - Remote D1 contains `affiliates`, `affiliate_conversions`, and `affiliate_earnings`.

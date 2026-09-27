@@ -11,6 +11,7 @@ import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { eq, and, sql } from 'drizzle-orm';
 import { db, affiliates, affiliateConversions, affiliateEarnings } from '@workspace/db';
+import { sendViaSmtp2go } from '../lib/smtp2go';
 
 const router = Router();
 
@@ -54,11 +55,7 @@ async function sendOtpEmail(email: string, otp: string): Promise<void> {
     process.env.SMTP2GO_SENDER_EMAIL ?? 'noreply@businessweboptimizer.com';
   if (!apiKey) throw new Error('SMTP2GO_API_KEY not configured');
 
-  const res = await fetch('https://api.smtp2go.com/v3/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_key: apiKey,
+  const result = await sendViaSmtp2go(apiKey, {
       to: [email],
       sender,
       subject: 'Your Business Web Optimizer affiliate login code',
@@ -75,12 +72,10 @@ async function sendOtpEmail(email: string, otp: string): Promise<void> {
           <p style="color:#9ca3af;font-size:12px">Business Web Optimizer Affiliate Program</p>
         </div>
       `,
-    }),
   });
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`SMTP2Go error (${res.status}): ${body}`);
+  if (!result.ok) {
+    throw new Error(`SMTP2Go error (${result.status}): ${result.detail}`);
   }
 }
 

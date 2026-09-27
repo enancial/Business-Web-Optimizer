@@ -7,6 +7,7 @@ import type { Logger } from 'pino';
 import { getUncachableStripeClient } from '../stripeClient';
 import { db, affiliates, affiliateConversions, affiliateEarnings } from '@workspace/db';
 import { eq, and } from 'drizzle-orm';
+import { sendViaSmtp2go } from './smtp2go';
 
 // ---------------------------------------------------------------------------
 // Shared email helper (SMTP2Go)
@@ -36,34 +37,22 @@ export async function sendTransactionalEmail({
   const sender =
     process.env.SMTP2GO_SENDER_EMAIL ?? 'report@businessweboptimizer.com';
 
-  let smtpRes: Response;
-  try {
-    smtpRes = await fetch('https://api.smtp2go.com/v3/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api_key: apiKey,
-        to: [to],
-        sender,
-        subject,
-        html_body: html,
-      }),
-    });
-  } catch (err) {
-    log.error({ err, to, subject }, 'Failed to reach SMTP2Go API');
-    return false;
-  }
+  const result = await sendViaSmtp2go(apiKey, {
+    to: [to],
+    sender,
+    subject,
+    html_body: html,
+  });
 
-  const data = (await smtpRes.json()) as {
-    data?: { succeeded?: number; failures?: string[] };
-    error?: string;
-  };
-
-  if (!smtpRes.ok || (data.data?.succeeded ?? 0) < 1) {
-    log.error(
-      { status: smtpRes.status, data, to, subject },
-      'SMTP2Go send failed',
-    );
+  if (!result.ok) {
+    if (result.unreachable) {
+      log.error({ err: result.detail, to, subject }, 'Failed to reach SMTP2Go API');
+    } else {
+      log.error(
+        { status: result.status, detail: result.detail, to, subject },
+        'SMTP2Go send failed',
+      );
+    }
     return false;
   }
 
