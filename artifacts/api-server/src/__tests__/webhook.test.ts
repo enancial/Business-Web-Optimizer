@@ -72,7 +72,7 @@ function makePaymentIntentEvent(
           product: 'optimizer',
         },
         ...overrides,
-      } as Stripe.PaymentIntent,
+      } as unknown as Stripe.PaymentIntent,
     },
   } as unknown as Stripe.Event;
 }
@@ -213,4 +213,3 @@ describe('subscriptionWebhook — idempotency (Task #10)', () => {
     expect(mockLog.error).toHaveBeenCalled();
   });
 });
-

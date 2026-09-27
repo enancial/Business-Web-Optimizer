@@ -14,7 +14,7 @@
  *  4. POST /api/create-payment-intent → invalid product returns 400
  *  5. POST /api/create-payment-intent → Stripe returns no pending_setup_intent →
  *     subscription is cancelled and 500 returned (safe abort)
- *  6. customer.subscription.created webhook (status='trialing') → stripe-replit-sync
+ *  6. customer.subscription.created webhook (status='trialing')
  *     handler fires → subscription is in the DB with status 'trialing'
  *  7. POST /api/account/auth with a trialing Stripe subscription → JWT
  *     contains tier='paid' (no charge required for access)
@@ -447,7 +447,7 @@ describe('customer.subscription.created webhook — trial start', () => {
           customer: TEST_CUSTOMER_ID,
           metadata: { product: 'optimizer', price_id: OPTIMIZER_PRICE_ID },
           items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
-        } as Stripe.Subscription,
+        } as unknown as Stripe.Subscription,
       },
     } as unknown as Stripe.Event;
 
@@ -485,7 +485,7 @@ describe('customer.subscription.created webhook — trial start', () => {
             affiliate_code: 'ALICEREF',
           },
           items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
-        } as Stripe.Subscription,
+        } as unknown as Stripe.Subscription,
       },
     } as unknown as Stripe.Event;
 
@@ -509,7 +509,7 @@ describe('customer.subscription.created webhook — trial start', () => {
           customer: TEST_CUSTOMER_ID,
           metadata: { affiliate_code: 'ALICEREF' },
           items: { data: [{ price: { id: OPTIMIZER_PRICE_ID } }] },
-        } as Stripe.Subscription,
+        } as unknown as Stripe.Subscription,
       },
     } as unknown as Stripe.Event;
 
@@ -611,7 +611,7 @@ describe('invoice.paid — $0 trial invoice does not accrue affiliate earnings',
           subscription: TEST_SUB_ID,
           amount_paid: 0, // ← Stripe fires this during trial with $0
           period_start: Math.floor(Date.now() / 1000),
-        } as Stripe.Invoice,
+        } as unknown as Stripe.Invoice,
       },
     } as unknown as Stripe.Event;
 
@@ -649,7 +649,7 @@ describe('invoice.paid — $0 trial invoice does not accrue affiliate earnings',
           subscription: TEST_SUB_ID,
           amount_paid: 2900, // ← first real charge after 7-day trial
           period_start: Math.floor(new Date('2026-08-03T00:00:00Z').getTime() / 1000),
-        } as Stripe.Invoice,
+        } as unknown as Stripe.Invoice,
       },
     } as unknown as Stripe.Event;
 

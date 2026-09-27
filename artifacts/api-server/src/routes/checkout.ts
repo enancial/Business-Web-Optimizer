@@ -6,6 +6,8 @@ import { eq, and } from 'drizzle-orm';
 
 const router: IRouter = Router();
 
+type PromotionCodeWithCoupon = Stripe.PromotionCode & { coupon: Stripe.Coupon };
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -19,7 +21,7 @@ const router: IRouter = Router();
  */
 async function findActivePromoCode(
   code: string,
-): Promise<Stripe.PromotionCode | null> {
+): Promise<PromotionCodeWithCoupon | null> {
   const secretKey = await getStripeSecretKey();
 
   const qs = new URLSearchParams({
@@ -34,7 +36,9 @@ async function findActivePromoCode(
 
   if (!res.ok) return null;
 
-  const data = (await res.json()) as { data: Stripe.PromotionCode[] };
+  const data = (await res.json()) as {
+    data: PromotionCodeWithCoupon[];
+  };
   return data.data[0] ?? null;
 }
 
@@ -210,7 +214,7 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
   }
 
   // ── Resolve promotion code (if provided) ──────────────────────────────────
-  let promoCode: Stripe.PromotionCode | null = null;
+  let promoCode: PromotionCodeWithCoupon | null = null;
   if (typeof promotionCode === 'string' && promotionCode.trim()) {
     promoCode = await findActivePromoCode(promotionCode);
     if (!promoCode) {

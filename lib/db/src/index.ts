@@ -1,16 +1,28 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
-const { Pool } = pg;
+export type Database = DrizzleD1Database<typeof schema>;
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+let instance: Database | null = null;
+
+export function initDb(binding: D1Database): Database {
+  instance = drizzle(binding, { schema });
+  return instance;
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+export function isDbReady(): boolean {
+  return instance !== null;
+}
+
+export const db: Database = new Proxy({} as Database, {
+  get(_target, prop, receiver) {
+    if (!instance) {
+      throw new Error(
+        "Database not initialised: initDb(env.DB) was never called.",
+      );
+    }
+    return Reflect.get(instance, prop, receiver);
+  },
+});
 
 export * from "./schema";

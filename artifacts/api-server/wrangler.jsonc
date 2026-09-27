@@ -1,0 +1,37 @@
+{
+  "name": "business-web-optimizer-app",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../businesswebdev/dist/public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/robots.txt", "/sitemap.xml"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "business-web-optimizer-db",
+      "database_id": "29dc5ef0-d942-4228-adc8-10d7e8b504d4"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "ENVIRONMENT": "production",
+    "APP_URL": "https://businessweboptimizer.com",
+    "PUBLIC_BASE_URL": "https://businessweboptimizer.com",
+    "OPTIMIZER_PRICE_ID": "price_1TzrCmJUmA42MDGcjlMck8Gd",
+    "OPTIMIZER_PRO_PRICE_ID": "price_1TzrCmJUmA42MDGcmqVtDmpO",
+    "LAUNCH_PACKAGE_PRICE_ID": "price_1TzKdMJUmA42MDGciRYULgas",
+    "MANAGEMENT_PLAN_PRICE_ID": "price_1TzKdNJUmA42MDGcFVwM96Wi",
+    "SMTP2GO_SENDER_EMAIL": "report@businessweboptimizer.com"
+  }
+  // Custom domain attachment is intentionally omitted here; the parent cutover
+  // will attach businessweboptimizer.com after workers.dev verification.
+}

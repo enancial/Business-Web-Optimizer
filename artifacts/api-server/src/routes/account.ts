@@ -309,7 +309,8 @@ router.get('/account', async (req, res): Promise<void> => {
         status: activeSub.status,
         plan,
         planLabel: OPTIMIZER_PLAN_LABELS[plan] ?? plan,
-        currentPeriodEnd: activeSub.current_period_end,
+        currentPeriodEnd:
+          (activeSub as unknown as { current_period_end?: number }).current_period_end ?? null,
         trialEnd: activeSub.trial_end ?? null,
         amount: activeSub.items.data[0]?.price.unit_amount ?? 0,
         currency: activeSub.items.data[0]?.price.currency ?? 'usd',

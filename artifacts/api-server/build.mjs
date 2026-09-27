@@ -28,11 +28,7 @@ async function buildAll() {
     // - uses native modules and loads them dynamically (e.g. sharp)
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
-      // Stripe packages use internal __dirname-based file resolution (migrations,
-      // worker threads) that breaks when bundled by esbuild. Keep them external
-      // so Node resolves them from node_modules at runtime.
       "stripe",
-      "stripe-replit-sync",
       "*.node",
       "sharp",
       "better-sqlite3",

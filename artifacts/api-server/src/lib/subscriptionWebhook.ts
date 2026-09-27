@@ -1,10 +1,5 @@
 /**
- * Custom webhook business logic layered on top of stripe-replit-sync.
- *
- * stripe-replit-sync's processWebhook() already verifies the Stripe signature
- * and upserts every event into the local DB.  This module runs *after* that
- * sync step to handle domain-specific actions — currently: creating a recurring
- * subscription when a Management Plan PaymentIntent succeeds.
+ * Custom webhook business logic for verified Stripe webhook events.
  */
 
 import type Stripe from 'stripe';
@@ -76,7 +71,7 @@ export async function sendTransactionalEmail({
 }
 
 // ---------------------------------------------------------------------------
-// Main dispatcher — call this after stripeSync.processWebhook() returns
+// Main dispatcher — call this after the webhook signature has been verified.
 // ---------------------------------------------------------------------------
 
 export async function handleWebhookEvent(
@@ -100,7 +95,7 @@ export async function handleWebhookEvent(
       await onSubscriptionDeleted(event.data.object as Stripe.Subscription, log);
       break;
     default:
-      // All other events are handled by stripe-replit-sync — nothing to do here.
+      // All other events are intentionally ignored.
       break;
   }
 }
@@ -222,9 +217,6 @@ async function onPaymentIntentSucceeded(
     'Recurring subscription created automatically via payment_intent.succeeded webhook',
   );
 
-  // stripe-replit-sync will sync this subscription to the local DB when
-  // the customer.subscription.created webhook arrives — no extra DB work needed.
-
   // Record affiliate conversion if this checkout was referred
   await recordAffiliateConversion(
     paymentIntent.metadata?.affiliate_code,
@@ -285,8 +277,13 @@ async function recordAffiliateConversion(
 // ---------------------------------------------------------------------------
 
 async function onInvoicePaid(invoice: Stripe.Invoice, log: Logger): Promise<void> {
+  const invoiceWithSubscription = invoice as unknown as {
+    subscription?: string | Stripe.Subscription | null;
+  };
   const subscriptionId =
-    typeof invoice.subscription === 'string' ? invoice.subscription : null;
+    typeof invoiceWithSubscription.subscription === 'string'
+      ? invoiceWithSubscription.subscription
+      : null;
   if (!subscriptionId || !invoice.amount_paid || invoice.amount_paid <= 0) return;
 
   // Find an active affiliate conversion for this subscription
