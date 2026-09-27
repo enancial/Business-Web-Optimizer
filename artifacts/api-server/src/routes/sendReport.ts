@@ -1,4 +1,5 @@
 import { Router, type IRouter } from 'express';
+import { sendViaSmtp2go } from '../lib/smtp2go';
 
 const router: IRouter = Router();
 
@@ -213,36 +214,21 @@ router.post('/send-report', async (req, res): Promise<void> => {
 
   const html = buildEmailHtml(url, score, issues);
 
-  const payload = {
-    api_key: apiKey,
+  const result = await sendViaSmtp2go(apiKey, {
     to: [email],
     sender,
     subject: `Your Website Optimization Report — Score: ${score}/100`,
     html_body: html,
-  };
+  });
 
-  let smtpRes: Response;
-  try {
-    smtpRes = await fetch('https://api.smtp2go.com/v3/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-  } catch (err) {
-    req.log.error({ err }, 'Failed to reach SMTP2Go API');
-    res.status(502).json({ error: 'Could not reach email service.' });
-    return;
-  }
-
-  const data = (await smtpRes.json()) as {
-    data?: { succeeded?: number; failed?: number; failures?: string[] };
-    error?: string;
-  };
-
-  if (!smtpRes.ok || (data.data?.succeeded ?? 0) < 1) {
-    req.log.error({ status: smtpRes.status, data }, 'SMTP2Go send failed');
-    const detail = data.data?.failures?.[0] ?? data.error ?? 'Unknown error';
-    res.status(502).json({ error: `Email delivery failed: ${detail}` });
+  if (!result.ok) {
+    if (result.unreachable) {
+      req.log.error({ err: result.detail }, 'Failed to reach SMTP2Go API');
+      res.status(502).json({ error: 'Could not reach email service.' });
+      return;
+    }
+    req.log.error({ status: result.status, detail: result.detail }, 'SMTP2Go send failed');
+    res.status(502).json({ error: `Email delivery failed: ${result.detail}` });
     return;
   }
 

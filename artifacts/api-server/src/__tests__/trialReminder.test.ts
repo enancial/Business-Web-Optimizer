@@ -105,7 +105,7 @@ beforeEach(() => {
   fetchSpy = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
-    json: async () => ({ data: { succeeded: 1 } }),
+    json: async () => ({ data: [{ email_id: 'test-email-id' }] }),
   } as unknown as Response);
   vi.stubGlobal('fetch', fetchSpy);
 
@@ -118,16 +118,23 @@ beforeEach(() => {
 // Tests
 // ---------------------------------------------------------------------------
 
+/** The single email in the /email/batch payload of the first fetch call. */
+function sentEmail(): unknown {
+  const payload = JSON.parse(fetchSpy.mock.calls[0][1].body as string) as { emails: unknown[] };
+  expect(payload.emails).toHaveLength(1);
+  return payload.emails[0];
+}
+
 describe('sendPendingTrialReminders — 24h window', () => {
   it('sends an email when the trial ends within the reminder window', async () => {
     await sendPendingTrialReminders(mockLog);
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      'https://api.smtp2go.com/v3/email/send',
+      'https://api.smtp2go.com/v3/email/batch',
       expect.objectContaining({ method: 'POST' }),
     );
 
-    const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string) as {
+    const body = sentEmail() as {
       to: string[];
       subject: string;
       html_body: string;
@@ -216,7 +223,7 @@ describe('sendPendingTrialReminders — plan detection', () => {
 
     await sendPendingTrialReminders(mockLog);
 
-    const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string) as {
+    const body = sentEmail() as {
       html_body: string;
       subject: string;
     };
@@ -231,7 +238,7 @@ describe('sendPendingTrialReminders — error resilience', () => {
     fetchSpy.mockResolvedValue({
       ok: false,
       status: 400,
-      json: async () => ({ error: 'Bad Request', data: { succeeded: 0, failures: ['bad email'] } }),
+      json: async () => ({ data: { error: 'bad email', error_code: 'E_ApiResponseCodes.API_EXCEPTION' } }),
     } as unknown as Response);
 
     await expect(sendPendingTrialReminders(mockLog)).resolves.not.toThrow();
@@ -240,6 +247,29 @@ describe('sendPendingTrialReminders — error resilience', () => {
       expect.objectContaining({ status: 400 }),
       'SMTP2Go send failed',
     );
+  });
+
+  it('treats HTTP 200 without an email_id as a failed send, not a success', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ data: [] }),
+    } as unknown as Response);
+
+    await sendPendingTrialReminders(mockLog);
+
+    expect(mockLog.error).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 200 }),
+      'SMTP2Go send failed',
+    );
+    expect(stripe.subscriptions.update).not.toHaveBeenCalled();
+  });
+
+  it('sends the key in the X-Smtp2go-Api-Key header, not the body', async () => {
+    await sendPendingTrialReminders(mockLog);
+    const init = fetchSpy.mock.calls[0][1] as { headers: Record<string, string>; body: string };
+    expect(init.headers['X-Smtp2go-Api-Key']).toBe('test-smtp-key');
+    expect(init.body).not.toContain('test-smtp-key');
   });
 
   it('continues processing remaining subscriptions when one customer retrieval fails', async () => {
@@ -257,7 +287,7 @@ describe('sendPendingTrialReminders — error resilience', () => {
 
     // Second customer's email should still be sent
     expect(fetchSpy).toHaveBeenCalledTimes(1);
-    const body = JSON.parse(fetchSpy.mock.calls[0][1].body as string) as { to: string[] };
+    const body = sentEmail() as { to: string[] };
     expect(body.to).toEqual(['second@example.com']);
   });
 });
