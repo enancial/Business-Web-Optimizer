@@ -64,6 +64,18 @@ All mail goes through `src/lib/smtp2go.ts`, which calls `/v3/email/batch` with t
 
 Webhook verification uses `constructEventAsync`, because the sync `constructEvent` throws on Workers.
 
+Plain variable in `wrangler.jsonc`: `LEAD_NOTIFY_EMAIL` (`enancial@gmail.com`) receives the owner notice for each report request.
+
+## Report leads
+
+`POST /api/send-report` stores the request in D1 `report_leads` **before** sending anything, so a failed send still leaves the lead on record. It then emails the report, records `report_status` (`sent` / `failed`), `report_email_id` and `report_error`, and sends an owner notice to `LEAD_NOTIFY_EMAIL`, setting `owner_notified`. If the row can't be stored, the error is logged and the report and owner notice still go out, so the notice is the fallback record. The visitor asked for a report, not a sales follow-up, so these rows are not a consent basis for outreach.
+
+Read them:
+
+```powershell
+npx wrangler d1 execute business-web-optimizer-db --remote --command "SELECT id,email,url,score,report_status,owner_notified,created_at FROM report_leads ORDER BY id DESC LIMIT 20" --config artifacts\api-server\wrangler.jsonc
+```
+
 ## Verification checklist
 
 Verified 2026-09-27 on `https://businessweboptimizer.com`:
@@ -76,6 +88,6 @@ Verified 2026-09-27 on `https://businessweboptimizer.com`:
 - `POST /api/validate-promo` with a real code returns `valid: true` and live price amounts.
 - `POST /api/stripe/webhook` with a forged signature returns 400 "No signatures found".
 - `POST /api/send-report` to `enancial@gmail.com` returns `{"sent":true}`. SMTP2GO logged the message as `delivered`, and it arrived in the Gmail inbox, not spam.
-- `/robots.txt` on workers.dev returns `Disallow: /`.
+- The same request (deploy `ce2c3f75`) stored a `report_leads` row with `report_status='sent'`, an `email_id`, and `owner_notified=1`; both the report and the owner notice were `delivered` and in the inbox. The test row was deleted afterwards (count 0).- `/robots.txt` on workers.dev returns `Disallow: /`.
 - `/sitemap.xml` on workers.dev returns 404.
-- Remote D1 contains `affiliates`, `affiliate_conversions`, and `affiliate_earnings`.
+- Remote D1 contains `affiliates`, `affiliate_conversions`, `affiliate_earnings`, and `report_leads` (migration `0001_narrow_living_mummy.sql`).

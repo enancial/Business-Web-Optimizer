@@ -1,4 +1,6 @@
 import { Router, type IRouter } from 'express';
+import { eq } from 'drizzle-orm';
+import { db, reportLeads } from '@workspace/db';
 import { sendViaSmtp2go } from '../lib/smtp2go';
 
 const router: IRouter = Router();
@@ -202,9 +204,22 @@ router.post('/send-report', async (req, res): Promise<void> => {
     return;
   }
 
+  // Durable record first: the lead must survive even if every email below fails.
+  let leadId: number | null = null;
+  try {
+    const rows = await db
+      .insert(reportLeads)
+      .values({ email, url, score: Math.round(score) })
+      .returning({ id: reportLeads.id });
+    leadId = rows[0]?.id ?? null;
+  } catch (err) {
+    req.log.error({ err, url }, 'Failed to store report lead');
+  }
+
   const apiKey = process.env.SMTP2GO_API_KEY;
   if (!apiKey) {
-    req.log.error('SMTP2GO_API_KEY is not set');
+    req.log.error({ leadId }, 'SMTP2GO_API_KEY is not set');
+    await markLead(leadId, { reportStatus: 'failed', reportError: 'SMTP2GO_API_KEY not set' }, req.log);
     res.status(500).json({ error: 'Email service is not configured.' });
     return;
   }
@@ -221,6 +236,28 @@ router.post('/send-report', async (req, res): Promise<void> => {
     html_body: html,
   });
 
+  await markLead(
+    leadId,
+    result.ok
+      ? { reportStatus: 'sent', reportEmailId: result.emailId }
+      : { reportStatus: 'failed', reportError: result.detail },
+    req.log,
+  );
+
+  const ownerNotified = await notifyOwner(apiKey, sender, {
+    leadId,
+    email,
+    url,
+    score,
+    reportDelivered: result.ok,
+    reportError: result.ok ? undefined : result.detail,
+  });
+  if (ownerNotified) {
+    await markLead(leadId, { ownerNotified: true }, req.log);
+  } else {
+    req.log.error({ leadId }, 'Report lead owner notification failed');
+  }
+
   if (!result.ok) {
     if (result.unreachable) {
       req.log.error({ err: result.detail }, 'Failed to reach SMTP2Go API');
@@ -232,8 +269,59 @@ router.post('/send-report', async (req, res): Promise<void> => {
     return;
   }
 
-  req.log.info({ email, url, score }, 'Scan report email sent');
+  req.log.info({ leadId, url, score, ownerNotified }, 'Scan report email sent');
   res.json({ sent: true });
 });
+
+async function markLead(
+  leadId: number | null,
+  patch: Partial<typeof reportLeads.$inferInsert>,
+  log: { error: (obj: object, msg: string) => void },
+): Promise<void> {
+  if (leadId === null) return;
+  try {
+    await db.update(reportLeads).set(patch).where(eq(reportLeads.id, leadId));
+  } catch (err) {
+    log.error({ err, leadId }, 'Failed to update report lead');
+  }
+}
+
+/**
+ * Tells the business a report lead arrived. Returns false on any failure so
+ * the caller can record it; never throws.
+ */
+async function notifyOwner(
+  apiKey: string,
+  sender: string,
+  lead: {
+    leadId: number | null;
+    email: string;
+    url: string;
+    score: number;
+    reportDelivered: boolean;
+    reportError?: string;
+  },
+): Promise<boolean> {
+  const to = process.env.LEAD_NOTIFY_EMAIL;
+  if (!to) return false;
+  const lines = [
+    'Someone asked businessweboptimizer.com to email them a scan report.',
+    '',
+    `Email: ${lead.email}`,
+    `Site scanned: ${lead.url}`,
+    `Score: ${lead.score}/100`,
+    `Report delivered to them: ${lead.reportDelivered ? 'yes' : `NO — ${lead.reportError ?? 'unknown error'}`}`,
+    `Stored in D1 report_leads: ${lead.leadId === null ? 'NO — storage failed, this email is the only record' : `yes, id ${lead.leadId}`}`,
+    '',
+    'They asked for a report, not a sales follow-up. Establish a consent basis before any outreach.',
+  ];
+  const result = await sendViaSmtp2go(apiKey, {
+    to: [to],
+    sender,
+    subject: `BWO report lead: ${lead.url} (score ${lead.score})`,
+    text_body: lines.join('\n'),
+  });
+  return result.ok;
+}
 
 export default router;

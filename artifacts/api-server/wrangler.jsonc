@@ -26,6 +26,7 @@
     "ENVIRONMENT": "production",
     "APP_URL": "https://businessweboptimizer.com",
     "PUBLIC_BASE_URL": "https://businessweboptimizer.com",
+      "LEAD_NOTIFY_EMAIL": "enancial@gmail.com",
     "OPTIMIZER_PRICE_ID": "price_1TzrCmJUmA42MDGcjlMck8Gd",
     "OPTIMIZER_PRO_PRICE_ID": "price_1TzrCmJUmA42MDGcmqVtDmpO",
     "LAUNCH_PACKAGE_PRICE_ID": "price_1TzKdMJUmA42MDGciRYULgas",
