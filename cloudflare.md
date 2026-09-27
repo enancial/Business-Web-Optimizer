@@ -73,7 +73,9 @@ Verified 2026-09-27 on `https://businessweboptimizer.com`:
 - `/pricing` returns the SPA, not a 404.
 - `/api/healthz` returns `{"status":"ok"}`.
 - `POST /api/scan` with `{"url":"https://example.com"}` returns a free scan report without Stripe.
-- `POST /api/create-payment-intent` returns HTTP 503 while Stripe is not configured.
+- `GET /api/checkout-config` returns the live publishable key.
+- `POST /api/validate-promo` with a real code returns `valid: true` and live price amounts.
+- `POST /api/stripe/webhook` with a forged signature returns 400 "No signatures found".
 - `/robots.txt` on workers.dev returns `Disallow: /`.
 - `/sitemap.xml` on workers.dev returns 404.
 - Remote D1 contains `affiliates`, `affiliate_conversions`, and `affiliate_earnings`.
