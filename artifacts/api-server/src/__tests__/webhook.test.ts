@@ -51,6 +51,7 @@ const mockLog = {
 
 function makePaymentIntentEvent(
   overrides: Partial<{
+    id: string;
     status: string;
     customer: string;
     payment_method: string;
@@ -126,6 +127,7 @@ describe('subscriptionWebhook — idempotency (Task #10)', () => {
           expect.objectContaining({ price: OPTIMIZER_PRICE_ID }),
         ]),
       }),
+      { idempotencyKey: 'create-sub-pi_test_webhook' },
     );
   });
 
@@ -187,6 +189,36 @@ describe('subscriptionWebhook — idempotency (Task #10)', () => {
     await handleWebhookEvent(makePaymentIntentEvent(), mockLog);
 
     expect(stripe.subscriptions.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes Stripe idempotencyKey 'create-sub-' + PaymentIntent id (same string as BWD)", async () => {
+    await handleWebhookEvent(makePaymentIntentEvent(), mockLog);
+
+    expect(stripe.subscriptions.create).toHaveBeenCalledTimes(1);
+    expect(stripe.subscriptions.create.mock.calls[0][1]).toEqual({
+      idempotencyKey: 'create-sub-pi_test_webhook',
+    });
+  });
+
+  it('concurrent deliveries that both pass the list check send the SAME idempotency key (Stripe returns one subscription)', async () => {
+    // Race: both deliveries list before either create lands.
+    stripe.subscriptions.list.mockResolvedValue({ data: [] });
+
+    await Promise.all([
+      handleWebhookEvent(makePaymentIntentEvent(), mockLog),
+      handleWebhookEvent(makePaymentIntentEvent(), mockLog),
+    ]);
+
+    const keys = stripe.subscriptions.create.mock.calls.map((c) => c[1]?.idempotencyKey);
+    expect(keys).toEqual(['create-sub-pi_test_webhook', 'create-sub-pi_test_webhook']);
+  });
+
+  it('uses a different idempotency key for a different PaymentIntent', async () => {
+    await handleWebhookEvent(makePaymentIntentEvent({ id: 'pi_test_other' }), mockLog);
+
+    expect(stripe.subscriptions.create.mock.calls[0][1]).toEqual({
+      idempotencyKey: 'create-sub-pi_test_other',
+    });
   });
 
   it('is a no-op for payment intents not tagged with create_subscription action', async () => {
