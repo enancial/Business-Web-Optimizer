@@ -204,7 +204,7 @@ describe('POST /api/create-payment-intent — trial subscription', () => {
   it('returns intentType=setup, clientSecret, and trialDays=7 for optimizer product', async () => {
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     expect(res.status).toBe(200);
     expect(res.body.intentType).toBe('setup');
@@ -216,7 +216,7 @@ describe('POST /api/create-payment-intent — trial subscription', () => {
   it('creates a Stripe Subscription with trial_period_days=7 and payment_behavior=default_incomplete', async () => {
     await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     expect(stripe.subscriptions.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -233,15 +233,35 @@ describe('POST /api/create-payment-intent — trial subscription', () => {
   it('creates a new Stripe Customer for every trial signup', async () => {
     await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     expect(stripe.customers.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('creates the Stripe Customer WITH the email given at checkout (audit 2026-09-29)', async () => {
+    await request(app)
+      .post('/api/create-payment-intent')
+      .send({ email: '  Buyer@Example.com ', product: 'optimizer' });
+
+    expect(stripe.customers.create).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'buyer@example.com' }),
+    );
+  });
+
+  it('rejects checkout without a valid email before creating ANY Stripe object', async () => {
+    for (const body of [{ product: 'optimizer' }, { product: 'optimizer', email: 'not-an-email' }]) {
+      const res = await request(app).post('/api/create-payment-intent').send(body);
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/email/i);
+    }
+    expect(stripe.customers.create).not.toHaveBeenCalled();
+    expect(stripe.subscriptions.create).not.toHaveBeenCalled();
   });
 
   it('reflects correct originalAmount and discountedAmount for optimizer ($29/mo)', async () => {
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     expect(res.body.originalAmount).toBe(2900);
     expect(res.body.discountedAmount).toBe(2900);
@@ -263,7 +283,7 @@ describe('POST /api/create-payment-intent — trial subscription', () => {
 
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer-pro' });
+      .send({ email: 'buyer@example.com', product: 'optimizer-pro' });
 
     expect(res.status).toBe(200);
     expect(res.body.intentType).toBe('setup');
@@ -274,7 +294,7 @@ describe('POST /api/create-payment-intent — trial subscription', () => {
   it('does NOT charge the user — clientSecret comes from SetupIntent, not PaymentIntent', async () => {
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     // A SetupIntent client_secret starts with 'seti_' in real Stripe;
     // our mock returns the exact value we provided.
@@ -322,7 +342,7 @@ describe('POST /api/create-payment-intent — trial with promo code', () => {
 
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer', promotionCode: 'promo_test_20off' });
+      .send({ email: 'buyer@example.com', product: 'optimizer', promotionCode: 'promo_test_20off' });
 
     expect(res.status).toBe(200);
     expect(res.body.intentType).toBe('setup');
@@ -337,7 +357,7 @@ describe('POST /api/create-payment-intent — trial with promo code', () => {
 
     await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer', promotionCode: 'promo_test_20off' });
+      .send({ email: 'buyer@example.com', product: 'optimizer', promotionCode: 'promo_test_20off' });
 
     expect(stripe.subscriptions.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -375,7 +395,7 @@ describe('POST /api/create-payment-intent — $0 promo (isFree path)', () => {
   it('returns isFree=true and no clientSecret when promo reduces price to $0', async () => {
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer', promotionCode: 'promo_100off' });
+      .send({ email: 'buyer@example.com', product: 'optimizer', promotionCode: 'promo_100off' });
 
     expect(res.status).toBe(200);
     expect(res.body.isFree).toBe(true);
@@ -393,7 +413,7 @@ describe('POST /api/create-payment-intent — error cases', () => {
   it('returns 400 for an invalid product', async () => {
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'unknown-plan' });
+      .send({ email: 'buyer@example.com', product: 'unknown-plan' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/invalid product/i);
@@ -405,7 +425,7 @@ describe('POST /api/create-payment-intent — error cases', () => {
 
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     process.env.OPTIMIZER_PRICE_ID = original;
 
@@ -421,7 +441,7 @@ describe('POST /api/create-payment-intent — error cases', () => {
 
     const res = await request(app)
       .post('/api/create-payment-intent')
-      .send({ product: 'optimizer' });
+      .send({ email: 'buyer@example.com', product: 'optimizer' });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/trial checkout/i);
