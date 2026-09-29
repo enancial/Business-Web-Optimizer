@@ -183,15 +183,28 @@ router.post('/validate-promo', async (req, res): Promise<void> => {
  *            discountLabel?: string }
  */
 router.post('/create-payment-intent', async (req, res): Promise<void> => {
-  const { product, promotionCode, affiliateCode } = req.body as {
+  const { product, promotionCode, affiliateCode, email } = req.body as {
     product: unknown;
     promotionCode?: unknown;
     affiliateCode?: unknown;
+    email?: unknown;
   };
 
   if (!isValidProduct(product)) {
     res.status(400).json({
       error: "Invalid product. Must be 'optimizer' or 'optimizer-pro'.",
+    });
+    return;
+  }
+
+  // The Stripe customer must carry an email: /account sign-in, the
+  // trial-ending reminder and Stripe receipts all look it up there. Before
+  // 2026-09-29 checkout never collected one, so every trial customer was
+  // created without it (funnel audit). Checked before any Stripe object exists.
+  const customerEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail) || customerEmail.length > 254) {
+    res.status(400).json({
+      error: 'A valid email address is required so you can sign in to your account and get your trial reminder.',
     });
     return;
   }
@@ -277,7 +290,10 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
   // subscription with the promotion code applied.
   if (discountedAmount === 0) {
     if (promoCode) {
-      const customer = await stripe.customers.create();
+      const customer = await stripe.customers.create({
+        email: customerEmail,
+        metadata: { source: 'bwo_checkout' },
+      });
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{ price: priceId }],
@@ -298,7 +314,10 @@ router.post('/create-payment-intent', async (req, res): Promise<void> => {
   // Stripe creates a pending_setup_intent on the subscription; the frontend
   // confirms it via PaymentElement (no charge today). After day 7 Stripe issues
   // the first invoice and charges the saved payment method automatically.
-  const customer = await stripe.customers.create();
+  const customer = await stripe.customers.create({
+    email: customerEmail,
+    metadata: { source: 'bwo_checkout' },
+  });
 
   const subscription = await stripe.subscriptions.create({
     customer: customer.id,

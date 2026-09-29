@@ -93,12 +93,16 @@ async function apiFetch<T>(path: string, body: object): Promise<T> {
 
 interface OrderStepProps {
   product: Product;
-  onContinue: (promo: PromoResult | null) => void;
+  onContinue: (promo: PromoResult | null, email: string) => void;
   onBack: () => void;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
   const meta = PRODUCT_META[product];
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [codeInput, setCodeInput] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -226,11 +230,43 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
         </div>
       )}
 
+      {/* Account email — required: /account sign-in, the trial reminder and receipts use it */}
+      <div>
+        <label htmlFor="checkout-email" className="text-sm font-medium mb-1.5 block">
+          Email
+        </label>
+        <Input
+          id="checkout-email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailError(null);
+          }}
+          placeholder="you@yourbusiness.com"
+          aria-invalid={Boolean(emailError)}
+          aria-describedby="checkout-email-help"
+        />
+        <p id="checkout-email-help" className="text-xs text-muted-foreground mt-1.5">
+          You'll use this to sign in to your account and manage or cancel your plan.
+        </p>
+        {emailError && <p className="text-sm text-red-600 mt-1.5" role="alert">{emailError}</p>}
+      </div>
+
       {/* CTA */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <Button
           type="button"
-          onClick={() => onContinue(promoResult)}
+          onClick={() => {
+            const trimmed = email.trim();
+            if (!EMAIL_RE.test(trimmed)) {
+              setEmailError('Enter a valid email address to continue.');
+              return;
+            }
+            onContinue(promoResult, trimmed);
+          }}
           className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base"
         >
           {displayAmount === 0
@@ -436,7 +472,7 @@ export function CheckoutPage() {
     setIntentError(null);
   }
 
-  async function handleContinue(promo: PromoResult | null) {
+  async function handleContinue(promo: PromoResult | null, email: string) {
     if (!product) return;
     setIntentLoading(true);
     setIntentError(null);
@@ -444,6 +480,7 @@ export function CheckoutPage() {
     try {
       const data = await apiFetch<IntentResult>('/create-payment-intent', {
         product,
+        email,
         ...(promo ? { promotionCode: promo.promotionCodeId } : {}),
         ...(refParam ? { affiliateCode: refParam } : {}),
       });
