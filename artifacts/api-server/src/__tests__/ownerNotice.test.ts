@@ -10,7 +10,7 @@
  *  - SMTP2GO failure never throws out of the webhook handler
  *  - Missing LEAD_NOTIFY_EMAIL → no send, no throw
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type Stripe from 'stripe';
 
 const { mockUpdate } = vi.hoisted(() => ({ mockUpdate: vi.fn() }));
@@ -55,6 +55,18 @@ function event(type: string, object: Stripe.Subscription, previous?: Record<stri
 function sent(i = 0): { to: string[]; subject: string; text_body: string } {
   return JSON.parse(fetchSpy.mock.calls[i][1].body as string).emails[0];
 }
+
+const ENV_KEYS = ['SMTP2GO_API_KEY', 'LEAD_NOTIFY_EMAIL', 'OPTIMIZER_PRICE_ID', 'OPTIMIZER_PRO_PRICE_ID'] as const;
+const savedEnv: Record<string, string | undefined> = {};
+for (const k of ENV_KEYS) savedEnv[k] = process.env[k];
+
+afterEach(() => {
+  for (const k of ENV_KEYS) {
+    if (savedEnv[k] === undefined) delete process.env[k];
+    else process.env[k] = savedEnv[k];
+  }
+  vi.unstubAllGlobals();
+});
 
 beforeEach(() => {
   vi.resetAllMocks();
