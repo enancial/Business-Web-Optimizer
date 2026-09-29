@@ -207,6 +207,11 @@ async function onPaymentIntentSucceeded(
       source_payment_intent: paymentIntent.id,
       ...(promotionCodeId ? { promotion_code_id: promotionCodeId } : {}),
     },
+  }, {
+    // Duplicate-subscription guard: a retried or concurrently delivered webhook
+    // for the same PaymentIntent cannot create a second subscription. The same
+    // key string is used in Business-Web-Optimizer and Business-Web-Dev.
+    idempotencyKey: 'create-sub-' + paymentIntent.id,
   });
 
   log.info(
