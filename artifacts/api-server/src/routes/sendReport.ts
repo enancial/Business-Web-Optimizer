@@ -254,6 +254,9 @@ router.post('/send-report', async (req, res): Promise<void> => {
   });
   if (ownerNotified) {
     await markLead(leadId, { ownerNotified: true }, req.log);
+  } else if (leadId === null) {
+    // Neither D1 nor the owner notice holds this lead; the log line is the last record.
+    req.log.error({ email, url, score }, 'REPORT LEAD UNRECORDED: storage and owner notice both failed');
   } else {
     req.log.error({ leadId }, 'Report lead owner notification failed');
   }
@@ -270,7 +273,7 @@ router.post('/send-report', async (req, res): Promise<void> => {
   }
 
   req.log.info({ leadId, url, score, ownerNotified }, 'Scan report email sent');
-  res.json({ sent: true });
+  res.json({ sent: true, stored: leadId !== null, leadId, ownerNotified });
 });
 
 async function markLead(

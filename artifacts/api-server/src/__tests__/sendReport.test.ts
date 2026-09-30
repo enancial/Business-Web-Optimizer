@@ -89,7 +89,7 @@ describe('POST /api/send-report', () => {
     const res = await request(app).post('/api/send-report').send(BODY);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ sent: true });
+    expect(res.body).toEqual({ sent: true, stored: true, leadId: 41, ownerNotified: true });
     expect(calls[0]).toBe('insert');
     expect(fetchSpy).toHaveBeenCalledTimes(2);
     expect(fetchSpy.mock.calls[0][0]).toBe('https://api.smtp2go.com/v3/email/batch');
@@ -122,6 +122,7 @@ describe('POST /api/send-report', () => {
     const res = await request(app).post('/api/send-report').send(BODY);
 
     expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ sent: true, stored: false, leadId: null });
     expect(sentTo(1).text_body).toContain('storage failed');
     expect(mockUpdate).not.toHaveBeenCalled();
   });
