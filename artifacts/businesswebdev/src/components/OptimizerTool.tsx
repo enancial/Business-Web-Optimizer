@@ -115,7 +115,7 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
       <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-100">
         <div className="flex items-center gap-2">
           <Code2 className="h-4 w-4 text-purple-600" />
-          <span className="font-semibold text-gray-900 text-sm">Schema.org Structured Data</span>
+          <span className="font-semibold text-foreground text-sm">Schema.org Structured Data</span>
           <span className="flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full">
             <Sparkles className="h-3 w-3" />
             Optimizer Pro
@@ -123,7 +123,7 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-sm font-bold ${scoreColor}`}>{data.score}/100</span>
-          <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => setExpanded(!expanded)} className="text-muted-foreground hover:text-muted-foreground">
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
         </div>
@@ -131,7 +131,7 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
 
       {/* Summary */}
       <div className="px-6 py-4">
-        <p className="text-sm text-gray-700">{data.summary}</p>
+        <p className="text-sm text-foreground">{data.summary}</p>
       </div>
 
       {/* Expanded detail */}
@@ -139,7 +139,7 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
         <div className="px-6 pb-5 space-y-4 border-t border-purple-50 pt-4">
           {data.typesFound.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Types found</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Types found</p>
               <div className="flex flex-wrap gap-2">
                 {data.typesFound.map((t) => (
                   <span key={t} className="text-xs px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full font-medium">
@@ -151,10 +151,10 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
           )}
           {data.typesRecommended.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Recommended additions</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Recommended additions</p>
               <div className="flex flex-wrap gap-2">
                 {data.typesRecommended.map((t) => (
-                  <span key={t} className="text-xs px-2.5 py-1 bg-gray-50 text-gray-500 border border-dashed border-gray-300 rounded-full">
+                  <span key={t} className="text-xs px-2.5 py-1 bg-gray-50 text-muted-foreground border border-dashed border-gray-300 rounded-full">
                     + {t}
                   </span>
                 ))}
@@ -163,7 +163,7 @@ function SchemaDeepDiveSection({ data }: { data: SchemaDeepDive }) {
           )}
           {data.warnings.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Warnings</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Warnings</p>
               <ul className="space-y-1.5">
                 {data.warnings.map((w, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-amber-800">
@@ -186,14 +186,14 @@ function ProFeatureTeaser() {
       <div className="flex items-start gap-3">
         <Code2 className="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 mb-0.5">
+          <p className="text-sm font-semibold text-foreground mb-0.5">
             Schema.org Structured Data Analysis
             <span className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full align-middle">
               <Sparkles className="h-3 w-3" />
               Optimizer Pro
             </span>
           </p>
-          <p className="text-xs text-gray-500 mb-3">
+          <p className="text-xs text-muted-foreground mb-3">
             See how your competitors rank with structured data. Optimizer Pro analyses every JSON-LD block on your page — types found, missing rich-snippet opportunities, and a structured-data score.
           </p>
           <a
@@ -364,16 +364,17 @@ export function OptimizerTool() {
 
   return (
     <section id="optimizer-tool" className="py-20 bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-10"
+          className="mb-10"
         >
+          <div className="bwg-eyebrow">Run a scan</div>
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4"
             data-testid="text-optimizer-tool-headline"
           >
             Run Your Optimization Scan
@@ -437,7 +438,7 @@ export function OptimizerTool() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full mt-6 bg-[#1565D6] hover:bg-[#1A3A7A] text-white text-base gap-2"
+                  className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground text-base gap-2"
                   data-testid="button-run-scan"
                 >
                   Run Scan — It's Free
@@ -462,12 +463,12 @@ export function OptimizerTool() {
               className="bg-card border border-border rounded-2xl p-10 shadow-sm text-center"
               data-testid="scanning-state"
             >
-              <Loader2 className="h-12 w-12 text-[#1565D6] mx-auto mb-6 animate-spin" />
+              <Loader2 className="h-12 w-12 text-primary mx-auto mb-6 animate-spin" />
               <h3 className="text-xl font-semibold mb-2">Scanning your site…</h3>
               <p className="text-muted-foreground text-sm mb-8 font-mono">{url}</p>
               <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                 <motion.div
-                  className="h-2 rounded-full bg-[#1565D6]"
+                  className="h-2 rounded-full bg-primary"
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.4 }}
                 />
@@ -522,7 +523,7 @@ export function OptimizerTool() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
                   asChild
-                  className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white gap-2"
+                  className="bg-[var(--bwg-navy)] hover:bg-primary text-white gap-2"
                 >
                   <a href="/account">Go to My Account</a>
                 </Button>
@@ -657,10 +658,10 @@ export function OptimizerTool() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 }}
-                  className="mb-8 rounded-xl border border-dashed border-[#1565D6]/40 bg-[#1565D6]/5 px-6 py-5 text-center"
+                  className="mb-8 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-6 py-5 text-center"
                   data-testid="gated-teaser"
                 >
-                  <p className="text-sm font-semibold text-[#1565D6] mb-1">
+                  <p className="text-sm font-semibold text-primary mb-1">
                     +{result.totalIssues - result.issues.length} more issues found
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -671,7 +672,7 @@ export function OptimizerTool() {
               )}
 
               {/* Upgrade CTA */}
-              <div className="bg-[#1A3A7A] rounded-2xl p-8 text-white text-center">
+              <div className="bwg-on-navy bg-[var(--bwg-navy)] rounded-2xl p-8 text-white text-center">
                 <h3 className="text-xl font-bold mb-2">Want monthly re-scans + the full report?</h3>
                 <p className="text-blue-100 mb-6 text-sm">
                   Upgrade to Optimizer for a complete site audit, exportable PDF, and monthly
@@ -681,7 +682,7 @@ export function OptimizerTool() {
                   <Button
                     asChild
                     size="lg"
-                    className="bg-white text-[#1A3A7A] hover:bg-blue-50 font-semibold"
+                    className="bg-white text-primary hover:bg-blue-50 font-semibold"
                     data-testid="button-upgrade-optimizer"
                   >
                     <a href="/checkout?product=optimizer">Get Optimizer — $29/mo</a>

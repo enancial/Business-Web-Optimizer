@@ -13,19 +13,19 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden">
       <button
-        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-medium text-gray-900 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-medium text-foreground hover:bg-gray-50 transition-colors"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
         <span>{q}</span>
         {open ? (
-          <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
         )}
       </button>
       {open && (
-        <div className="px-5 pb-5 text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+        <div className="px-5 pb-5 text-sm text-muted-foreground leading-relaxed border-t border-gray-100 pt-4">
           {a}
         </div>
       )}
@@ -40,10 +40,10 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 function Step({ n, text }: { n: number; text: string }) {
   return (
     <div className="flex items-start gap-4">
-      <div className="shrink-0 w-8 h-8 rounded-full bg-[#1A3A7A] text-white flex items-center justify-center text-sm font-bold">
+      <div className="shrink-0 w-8 h-8 rounded-full bg-[var(--bwg-navy)] text-white flex items-center justify-center text-sm font-bold">
         {n}
       </div>
-      <p className="text-gray-700 leading-relaxed pt-1">{text}</p>
+      <p className="text-foreground leading-relaxed pt-1">{text}</p>
     </div>
   );
 }
@@ -58,7 +58,7 @@ export function AffiliatesPage() {
       <Nav />
 
       {/* ── Hero ── */}
-      <section className="bg-[#1A3A7A] text-white py-20 px-4">
+      <section className="bwg-on-navy bg-[var(--bwg-navy)] text-white py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-block bg-white/10 text-white/90 text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
             Affiliate Program
@@ -88,8 +88,8 @@ export function AffiliatesPage() {
 
         {/* ── What is the program ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">What is the Optimizer affiliate program?</h2>
-          <div className="text-gray-600 leading-relaxed space-y-4">
+          <h2 className="text-2xl font-bold text-foreground mb-4">What is the Optimizer affiliate program?</h2>
+          <div className="text-muted-foreground leading-relaxed space-y-4">
             <p>
               If you recommend tools to founders, agencies, or anyone running a website, you can earn
               30% recurring commissions for every subscriber you refer to Business Web Optimizer — for
@@ -108,20 +108,20 @@ export function AffiliatesPage() {
 
         {/* ── Who this is for ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Who this is for</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Who this is for</h2>
           <ul className="space-y-3 mb-4">
             {[
               'Agencies and consultants who recommend tools to clients',
               'Developers, marketers, and designers with an audience or network',
               'Content creators, newsletter authors, and community leaders in the founder/SMB space',
             ].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-gray-700">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#1A3A7A] shrink-0" />
+              <li key={item} className="flex items-start gap-3 text-foreground">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--bwg-navy)] shrink-0" />
                 {item}
               </li>
             ))}
           </ul>
-          <p className="text-gray-600 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             If you regularly suggest software or services to people running websites, this program is
             designed for you.
           </p>
@@ -129,7 +129,7 @@ export function AffiliatesPage() {
 
         {/* ── How it works ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">How it works</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">How it works</h2>
           <div className="space-y-5">
             <Step n={1} text="Sign up using the form below." />
             <Step n={2} text="Get your unique referral links for: Optimizer ($29/mo) and Optimizer Pro ($79/mo)." />
@@ -137,14 +137,14 @@ export function AffiliatesPage() {
             <Step n={4} text="Track your referrals, conversions, and earnings in real time." />
             <Step n={5} text="Get paid monthly via PayPal or bank transfer (minimum $50)." />
           </div>
-          <p className="mt-6 text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-xl px-5 py-4">
+          <p className="mt-6 text-sm text-muted-foreground bg-gray-50 border border-gray-200 rounded-xl px-5 py-4">
             Commissions are 30% of net revenue per invoice, for the first 12 months per referred subscriber.
           </p>
         </section>
 
         {/* ── What you'll earn ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">What you'll earn</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">What you'll earn</h2>
           <ul className="space-y-3 mb-5">
             {[
               '30% recurring commission on every referred Optimizer or Optimizer Pro subscriber.',
@@ -152,8 +152,8 @@ export function AffiliatesPage() {
               'Commissions accrue for the first 12 months of each subscriber\'s lifetime.',
               'Monthly payouts once your unpaid balance reaches at least $50.',
             ].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-gray-700">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#1A3A7A] shrink-0" />
+              <li key={item} className="flex items-start gap-3 text-foreground">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[var(--bwg-navy)] shrink-0" />
                 {item}
               </li>
             ))}
@@ -168,7 +168,7 @@ export function AffiliatesPage() {
 
         {/* ── What affiliates get ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">What affiliates get</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">What affiliates get</h2>
           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-3">
             {[
               'Unique referral links for Optimizer and Optimizer Pro',
@@ -177,7 +177,7 @@ export function AffiliatesPage() {
               'Monthly payouts via PayPal or bank transfer (minimum $50)',
               'The ability to update your payout email directly from your dashboard',
             ].map((item) => (
-              <div key={item} className="flex items-start gap-3 text-gray-700">
+              <div key={item} className="flex items-start gap-3 text-foreground">
                 <span className="mt-1.5 h-2 w-2 rounded-full bg-green-500 shrink-0" />
                 {item}
               </div>
@@ -187,7 +187,7 @@ export function AffiliatesPage() {
 
         {/* ── FAQ ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Frequently asked questions</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">Frequently asked questions</h2>
           <div className="space-y-3">
             {[
               {
@@ -217,16 +217,16 @@ export function AffiliatesPage() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="text-center bg-[#1A3A7A]/5 border border-[#1A3A7A]/10 rounded-2xl py-12 px-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to start earning?</h2>
-          <p className="text-gray-600 mb-8">Join the program and get your referral links in minutes.</p>
+        <section className="text-center bg-[var(--bwg-navy)]/5 border border-[var(--bwg-line-strong)]/10 rounded-2xl py-12 px-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Ready to start earning?</h2>
+          <p className="text-muted-foreground mb-8">Join the program and get your referral links in minutes.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white h-11 px-8 text-base">
+            <Button asChild className="bg-[var(--bwg-navy)] hover:bg-primary text-white h-11 px-8 text-base">
               <a href="/affiliates/join">Join the affiliate program →</a>
             </Button>
             <a
               href="/affiliates/dashboard"
-              className="text-sm text-[#1565D6] hover:underline"
+              className="text-sm text-primary hover:underline"
             >
               Already an affiliate? Log in to your dashboard
             </a>

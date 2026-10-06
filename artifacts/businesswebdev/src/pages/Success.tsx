@@ -48,7 +48,7 @@ export function Success() {
       <div className="max-w-lg w-full text-center">
         <CheckCircle2 className="h-16 w-16 text-emerald-400 mx-auto mb-6" />
 
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
           {isTrial ? 'Your free trial has started!' : "You're subscribed!"}
         </h1>
 

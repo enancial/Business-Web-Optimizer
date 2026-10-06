@@ -47,15 +47,16 @@ const faqs = [
 export function FAQ() {
   return (
     <section id="faq" className="py-20 bg-muted/30">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
+          <div className="bwg-eyebrow">Questions</div>
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-12 text-center"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-12"
             data-testid="text-faq-headline"
           >
             FAQ
@@ -82,11 +83,11 @@ export function FAQ() {
           {/* Contact line */}
           <p className="mt-10 text-center text-sm text-muted-foreground" data-testid="text-faq-contact">
             Still have questions?{' '}
-            <a href="mailto:contact@businessweboptimizer.com" className="text-[#1A3A7A] hover:underline font-medium">
+            <a href="mailto:contact@businessweboptimizer.com" className="text-primary hover:underline font-medium">
               contact@businessweboptimizer.com
             </a>
             {' '}or call{' '}
-            <a href="tel:+19844007773" className="text-[#1A3A7A] hover:underline font-medium whitespace-nowrap" data-testid="link-phone-faq">
+            <a href="tel:+19844007773" className="text-primary hover:underline font-medium whitespace-nowrap" data-testid="link-phone-faq">
               (984) 400‑7773
             </a>
           </p>

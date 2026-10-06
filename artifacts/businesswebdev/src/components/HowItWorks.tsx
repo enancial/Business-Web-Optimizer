@@ -26,21 +26,22 @@ const steps = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="py-20 bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
+          <div className="bwg-eyebrow">How it works</div>
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4 text-center"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4"
             data-testid="text-how-it-works-headline"
           >
             How it works
           </h2>
 
-          <p className="text-lg text-muted-foreground mb-12 text-center max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-muted-foreground mb-12 max-w-3xl leading-relaxed">
             Fully self-serve — no calls, no forms, no waiting. Founders in Raleigh, the Triangle area, and across the U.S. use Business Web Optimizer to spot and fix website issues fast.
           </p>
 
@@ -72,7 +73,7 @@ export function HowItWorks() {
             ))}
           </div>
 
-          <p className="text-sm text-muted-foreground text-center mt-12 italic">
+          <p className="text-sm text-muted-foreground mt-12 italic">
             Do I need to talk to anyone to use this? No — Business Web Optimizer is fully self-serve.
           </p>
         </motion.div>

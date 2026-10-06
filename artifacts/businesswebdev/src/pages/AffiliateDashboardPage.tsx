@@ -151,7 +151,7 @@ function LoginFlow({ onAuth }: { onAuth: (token: string) => void }) {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+              className="w-full bg-[var(--bwg-navy)] hover:bg-primary text-white"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send login code →'}
             </Button>
@@ -186,7 +186,7 @@ function LoginFlow({ onAuth }: { onAuth: (token: string) => void }) {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+              className="w-full bg-[var(--bwg-navy)] hover:bg-primary text-white"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify code →'}
             </Button>
@@ -201,7 +201,7 @@ function LoginFlow({ onAuth }: { onAuth: (token: string) => void }) {
         )}
         <p className="text-xs text-center text-muted-foreground mt-4">
           Not an affiliate yet?{' '}
-          <a href="/affiliates/join" className="text-[#1565D6] hover:underline">
+          <a href="/affiliates/join" className="text-primary hover:underline">
             Apply here
           </a>
         </p>
@@ -251,7 +251,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 animate-spin text-[#1A3A7A]" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -275,7 +275,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           <h1 className="text-2xl font-bold">Welcome, {affiliate.name}</h1>
           <p className="text-muted-foreground text-sm">
             Your affiliate code:{' '}
-            <span className="font-mono font-bold text-[#1A3A7A]">{affiliate.code}</span>
+            <span className="font-mono font-bold text-primary">{affiliate.code}</span>
           </p>
         </div>
         <button
@@ -295,7 +295,7 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
           { label: 'Unpaid', value: formatCents(stats.unpaidCents) },
         ].map(({ label, value }) => (
           <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
-            <p className="text-xl font-bold text-[#1A3A7A]">{value}</p>
+            <p className="text-xl font-bold text-primary">{value}</p>
             <p className="text-xs text-muted-foreground mt-1">{label}</p>
           </div>
         ))}
@@ -349,9 +349,9 @@ function Dashboard({ token, onLogout }: { token: string; onLogout: () => void })
       </div>
 
       {/* Commission info + PayPal payout email */}
-      <div className="bg-[#1A3A7A]/5 border border-[#1A3A7A]/20 rounded-2xl p-5 space-y-4">
+      <div className="bg-[var(--bwg-navy)]/5 border border-[var(--bwg-line)] rounded-2xl p-5 space-y-4">
         <div>
-          <h2 className="font-semibold text-[#1A3A7A] mb-2">Commission details</h2>
+          <h2 className="font-semibold text-primary mb-2">Commission details</h2>
           <ul className="text-sm text-muted-foreground space-y-1">
             <li>• <strong>30%</strong> of each invoice paid by your referrals</li>
             <li>• Applies for the <strong>first 12 months</strong> of each referred subscription</li>
@@ -406,7 +406,7 @@ function PayPalEmailForm({
 
   return (
     <form onSubmit={handleSave} className="space-y-2">
-      <Label htmlFor="paypal-email" className="text-sm font-medium text-[#1A3A7A]">
+      <Label htmlFor="paypal-email" className="text-sm font-medium text-primary">
         Payout email (PayPal)
       </Label>
       {!initialEmail && (
@@ -428,7 +428,7 @@ function PayPalEmailForm({
           type="submit"
           disabled={saving}
           size="sm"
-          className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white shrink-0"
+          className="bg-[var(--bwg-navy)] hover:bg-primary text-white shrink-0"
         >
           {saving ? 'Saving…' : 'Save'}
         </Button>
@@ -464,7 +464,7 @@ export function AffiliateDashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b px-4 sm:px-6 py-4 flex items-center justify-between">
-        <a href="/" className="font-bold text-[#1A3A7A] text-lg">Business Web Optimizer</a>
+        <a href="/" className="font-bold text-primary text-lg">Business Web Optimizer</a>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Affiliate Dashboard</span>
       </header>
 

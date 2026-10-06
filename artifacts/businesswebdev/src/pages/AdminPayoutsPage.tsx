@@ -111,7 +111,7 @@ export function AdminPayoutsPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b px-4 sm:px-6 py-4 flex items-center gap-3">
-        <a href="/" className="font-bold text-[#1A3A7A] text-lg">Business Web Optimizer</a>
+        <a href="/" className="font-bold text-primary text-lg">Business Web Optimizer</a>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">Admin — Affiliate Payouts</span>
       </header>
 
@@ -144,7 +144,7 @@ export function AdminPayoutsPage() {
             <Button
               onClick={handlePreview}
               disabled={loading || !adminSecret}
-              className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+              className="bg-[var(--bwg-navy)] hover:bg-primary text-white"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Preview payouts
@@ -247,7 +247,7 @@ export function AdminPayoutsPage() {
                       <td className="px-4 py-3 text-muted-foreground">
                         {row.paypalEmail ?? <span className="text-amber-500 text-xs">Not set</span>}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-[#1A3A7A]">
+                      <td className="px-4 py-3 text-right font-semibold text-primary">
                         {formatCents(row.totalCommissionCents)}
                       </td>
                     </tr>
@@ -258,7 +258,7 @@ export function AdminPayoutsPage() {
                     <td colSpan={4} className="px-4 py-3 font-semibold text-right text-muted-foreground">
                       Total payout
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-[#1A3A7A]">
+                    <td className="px-4 py-3 text-right font-bold text-primary">
                       {formatCents(rows.reduce((s, r) => s + r.totalCommissionCents, 0))}
                     </td>
                   </tr>

@@ -8,8 +8,8 @@ import { Footer } from '@/components/Footer';
 
 function BulletItem({ text }: { text: string }) {
   return (
-    <li className="flex items-start gap-3 text-gray-700">
-      <span className="mt-1.5 h-2 w-2 rounded-full bg-[#1A3A7A] shrink-0" />
+    <li className="flex items-start gap-3 text-foreground">
+      <span className="mt-1.5 h-2 w-2 rounded-full bg-[var(--bwg-navy)] shrink-0" />
       {text}
     </li>
   );
@@ -31,24 +31,24 @@ function PlanCard({
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <h3 className="font-bold text-gray-900 text-lg">{name}</h3>
+        <h3 className="font-bold text-foreground text-lg">{name}</h3>
         {badge && (
-          <span className="text-xs font-semibold bg-[#1A3A7A]/10 text-[#1A3A7A] px-2.5 py-0.5 rounded-full shrink-0">
+          <span className="text-xs font-semibold bg-[var(--bwg-tint)] text-primary px-2.5 py-0.5 rounded-full shrink-0">
             {badge}
           </span>
         )}
       </div>
-      {price && <p className="text-2xl font-bold text-[#1A3A7A] mb-4">{price}</p>}
+      {price && <p className="text-2xl font-bold text-primary mb-4">{price}</p>}
       <ul className="space-y-2 flex-1">
         {bullets.map((b) => (
-          <li key={b} className="flex items-start gap-2.5 text-sm text-gray-600">
+          <li key={b} className="flex items-start gap-2.5 text-sm text-muted-foreground">
             <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-gray-400 shrink-0" />
             {b}
           </li>
         ))}
       </ul>
       {note && (
-        <p className="mt-4 text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 leading-relaxed">
+        <p className="mt-4 text-xs text-muted-foreground bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 leading-relaxed">
           {note}
         </p>
       )}
@@ -66,7 +66,7 @@ export function PartnersPage() {
       <Nav />
 
       {/* ── Hero ── */}
-      <section className="bg-[#1A3A7A] text-white py-20 px-4">
+      <section className="bwg-on-navy bg-[var(--bwg-navy)] text-white py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-block bg-white/10 text-white/90 text-xs font-semibold px-3 py-1 rounded-full mb-4 uppercase tracking-wide">
             For Agencies &amp; Partners
@@ -84,7 +84,7 @@ export function PartnersPage() {
 
         {/* ── Why agencies use Optimizer ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Why agencies use Optimizer</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">Why agencies use Optimizer</h2>
           <ul className="space-y-5">
             {[
               {
@@ -105,10 +105,10 @@ export function PartnersPage() {
               },
             ].map(({ title, body }) => (
               <li key={title} className="flex items-start gap-4">
-                <span className="mt-1 h-2 w-2 rounded-full bg-[#1A3A7A] shrink-0" />
+                <span className="mt-1 h-2 w-2 rounded-full bg-[var(--bwg-navy)] shrink-0" />
                 <div>
-                  <span className="font-semibold text-gray-900">{title}: </span>
-                  <span className="text-gray-600 leading-relaxed">{body}</span>
+                  <span className="font-semibold text-foreground">{title}: </span>
+                  <span className="text-muted-foreground leading-relaxed">{body}</span>
                 </div>
               </li>
             ))}
@@ -117,7 +117,7 @@ export function PartnersPage() {
 
         {/* ── Plans ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Plans that fit agency workflows</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">Plans that fit agency workflows</h2>
           <div className="grid sm:grid-cols-3 gap-4">
             <PlanCard
               name="Free"
@@ -153,7 +153,7 @@ export function PartnersPage() {
               ]}
             />
           </div>
-          <p className="mt-4 text-sm text-gray-500 text-center">
+          <p className="mt-4 text-sm text-muted-foreground text-center">
             For agencies, Optimizer Pro is usually the best fit, especially if you manage multiple
             client sites or need white‑label reporting.
           </p>
@@ -161,11 +161,11 @@ export function PartnersPage() {
 
         {/* ── Two ways to work with us ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Two ways to work with us</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-8">Two ways to work with us</h2>
 
           {/* Option 1 */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">1. Use Optimizer internally</h3>
+            <h3 className="text-lg font-bold text-foreground mb-4">1. Use Optimizer internally</h3>
             <ul className="space-y-2.5 mb-6">
               {[
                 'Sign up for an Optimizer or Optimizer Pro account.',
@@ -175,15 +175,15 @@ export function PartnersPage() {
                 <BulletItem key={item} text={item} />
               ))}
             </ul>
-            <Button asChild className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white h-10 px-6">
+            <Button asChild className="bg-[var(--bwg-navy)] hover:bg-primary text-white h-10 px-6">
               <a href="/">Start your 7‑day free trial →</a>
             </Button>
           </div>
 
           {/* Option 2 */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">2. Recommend Optimizer and earn commissions</h3>
-            <div className="text-gray-600 leading-relaxed mb-4 space-y-3">
+            <h3 className="text-lg font-bold text-foreground mb-3">2. Recommend Optimizer and earn commissions</h3>
+            <div className="text-muted-foreground leading-relaxed mb-4 space-y-3">
               <p>
                 If you refer clients or peers to Optimizer, you can earn 30% recurring commissions for
                 every subscriber you refer — for their first 12 months.
@@ -209,7 +209,7 @@ export function PartnersPage() {
                 ))}
               </ul>
             </div>
-            <Button asChild variant="outline" className="border-[#1A3A7A] text-[#1A3A7A] hover:bg-[#1A3A7A]/5 h-10 px-6">
+            <Button asChild variant="outline" className="border-[var(--bwg-line-strong)] text-primary hover:bg-[var(--bwg-navy)]/5 h-10 px-6">
               <a href="/affiliates/join">Become an affiliate →</a>
             </Button>
           </div>
@@ -217,7 +217,7 @@ export function PartnersPage() {
 
         {/* ── How agencies typically use Optimizer ── */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">How agencies typically use Optimizer</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">How agencies typically use Optimizer</h2>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               {
@@ -238,21 +238,21 @@ export function PartnersPage() {
               },
             ].map(({ title, body }) => (
               <div key={title} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{body}</p>
+                <h3 className="font-semibold text-foreground mb-2">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── Contact ── */}
-        <section className="text-center bg-[#1A3A7A]/5 border border-[#1A3A7A]/10 rounded-2xl py-12 px-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Want to discuss agency use cases or volume?</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
+        <section className="text-center bg-[var(--bwg-navy)]/5 border border-[var(--bwg-line-strong)]/10 rounded-2xl py-12 px-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Want to discuss agency use cases or volume?</h2>
+          <p className="text-muted-foreground mb-8 leading-relaxed">
             If you're managing many client sites or want to explore deeper integration (e.g., API
             workflows, custom reporting), we're happy to talk.
           </p>
-          <Button asChild className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white h-11 px-8 text-base">
+          <Button asChild className="bg-[var(--bwg-navy)] hover:bg-primary text-white h-11 px-8 text-base">
             <a href="mailto:support@businessweboptimizer.com">Contact us →</a>
           </Button>
         </section>

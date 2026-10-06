@@ -23,19 +23,20 @@ const cards = [
 export function WhichDoINeed() {
   return (
     <section className="py-20 bg-background">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
+        <div className="bwg-eyebrow">Which one</div>
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-3xl sm:text-4xl font-bold text-center mb-12"
+          className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-12"
           data-testid="text-which-do-i-need-headline"
         >
           Which Plan Do I Need?
         </motion.h2>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           {cards.map((card, index) => (
             <motion.div
               key={card.testId}

@@ -20,7 +20,7 @@ interface LaunchPackageProps {
 export function LaunchPackage({ onCheckout }: LaunchPackageProps) {
   return (
     <section id="launch-package" className="py-20 bg-muted/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,7 +32,7 @@ export function LaunchPackage({ onCheckout }: LaunchPackageProps) {
           </div>
 
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4"
             data-testid="text-launch-package-headline"
           >
             30-Day Launch Package
@@ -74,7 +74,7 @@ export function LaunchPackage({ onCheckout }: LaunchPackageProps) {
           <Button
             size="lg"
             onClick={onCheckout}
-            className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-base px-10"
+            className="w-full sm:w-auto  text-base px-10"
             data-testid="button-start-launch-package"
           >
             Start your 30-Day Launch Package – $2,500

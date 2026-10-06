@@ -1,7 +1,7 @@
 export function Footer() {
   return (
     <footer className="bg-[hsl(220,15%,12%)] text-white py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
 
         {/* Brand mark */}
         <div className="flex justify-center mb-3">

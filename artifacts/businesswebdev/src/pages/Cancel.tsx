@@ -7,7 +7,7 @@ export function Cancel() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-20">
       <div className="max-w-lg w-full text-center">
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-4">
           No worries at all.
         </h1>
 
