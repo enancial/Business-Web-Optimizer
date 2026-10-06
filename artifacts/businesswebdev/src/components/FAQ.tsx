@@ -25,7 +25,7 @@ const faqs = [
   {
     question: "What's included in Free vs Optimizer vs Optimizer Pro?",
     answer:
-      'Free Trial scans up to 5 pages and shows your top 3 issues — good for a quick gut-check. Optimizer runs a full site scan with 20+ checks, an exportable PDF report, and a monthly re-scan. Optimizer Pro adds scheduled auto-scans, competitor comparison, white-label PDF reports, and API access.',
+      'Free Trial scans a page and shows your top 3 issues — good for a quick gut-check. Optimizer runs a full site scan with 20+ checks and delivers the complete prioritized issue list by email. Optimizer Pro adds a Schema.org structured-data deep-dive and priority support.',
   },
   {
     question: 'Do I need to talk to anyone to use this?',

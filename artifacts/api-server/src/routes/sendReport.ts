@@ -138,8 +138,8 @@ function buildEmailHtml(url: string, score: number, issues: Issue[]): string {
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #1a3a7a; border-radius: 10px; padding: 24px;">
                 <tr>
                   <td>
-                    <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 700; color: #ffffff;">Want monthly re-scans + the full report?</h3>
-                    <p style="margin: 0 0 20px; font-size: 13px; color: #bfdbfe; line-height: 1.6;">Upgrade to Optimizer to track your progress over time, get a complete site audit, and receive monthly re-scans automatically.</p>
+                    <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 700; color: #ffffff;">Want the full report?</h3>
+                    <p style="margin: 0 0 20px; font-size: 13px; color: #bfdbfe; line-height: 1.6;">Upgrade to Optimizer for the complete prioritized issue list, delivered to your inbox.</p>
                     <a href="https://businessweboptimizer.com/checkout?product=optimizer" style="
                       display: inline-block;
                       background: #ffffff;

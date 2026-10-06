@@ -93,15 +93,15 @@ export function PartnersPage() {
               },
               {
                 title: 'Show clear, measurable value',
-                body: 'Use exportable PDF reports (including white‑label reports on Optimizer Pro) to show clients what\'s wrong, what you\'re fixing, and how things improve over time.',
+                body: 'Use the full emailed issue report to show clients what\'s wrong and what you\'re fixing.',
               },
               {
                 title: 'Standardize your optimization workflow',
-                body: 'Make Optimizer part of your onboarding and ongoing maintenance process: scan at kickoff, re‑scan after changes, and track improvements monthly.',
+                body: 'Make Optimizer part of your onboarding and ongoing maintenance process: scan at kickoff, re‑scan after changes, and track improvements.',
               },
               {
-                title: 'Automate monitoring with scheduled scans',
-                body: 'On Optimizer Pro, set up automatic recurring scans so you\'re alerted to new issues before your clients notice.',
+                title: 'Go deeper on structured data',
+                body: 'On Optimizer Pro, get a Schema.org structured-data deep-dive alongside the full report.',
               },
             ].map(({ title, body }) => (
               <li key={title} className="flex items-start gap-4">
@@ -122,7 +122,7 @@ export function PartnersPage() {
             <PlanCard
               name="Free"
               bullets={[
-                'Scan up to 5 pages, see top 3 issues.',
+                'Instant page scan, see top 3 issues.',
                 'Good for quick internal checks or small sites.',
                 'No credit card required.',
               ]}
@@ -132,11 +132,9 @@ export function PartnersPage() {
               price="$29/mo"
               note="Includes a 7‑day free trial (no charge today, cancel anytime before day 7)."
               bullets={[
-                'Full site scan (no page limit).',
                 '20+ checks across performance, SEO, and accessibility.',
-                'Prioritized, actionable fix list.',
-                'Exportable PDF report.',
-                'Monthly re‑scan to track improvements over time.',
+                'Full prioritized, actionable fix list.',
+                'Complete report delivered by email.',
               ]}
             />
             <PlanCard
@@ -146,16 +144,14 @@ export function PartnersPage() {
               note="Includes a 7‑day free trial (no charge today, cancel anytime before day 7)."
               bullets={[
                 'Everything in Optimizer, plus:',
-                'Scheduled auto‑scans',
-                'Competitor comparison',
-                'White‑label PDF reports (your branding, client‑ready)',
-                'API access (integrate scans into your own tools/workflows)',
+                'Schema.org structured-data deep-dive',
+                'Priority support',
               ]}
             />
           </div>
-          <p className="mt-4 text-sm text-muted-foreground text-center">
-            For agencies, Optimizer Pro is usually the best fit, especially if you manage multiple
-            client sites or need white‑label reporting.
+          <p className="mt-4 text-sm text-gray-500 text-center">
+            For agencies, Optimizer Pro is usually the best fit if you want the deeper
+            structured-data analysis alongside priority support.
           </p>
         </section>
 
@@ -222,7 +218,7 @@ export function PartnersPage() {
             {[
               {
                 title: 'Pre‑sales & proposals',
-                body: 'Run a quick scan on a prospect\'s site to highlight concrete issues you can solve. Use the PDF report as part of your proposal.',
+                body: 'Run a quick scan on a prospect\'s site to highlight concrete issues you can solve. Use the emailed report as part of your proposal.',
               },
               {
                 title: 'Onboarding & audits',
@@ -230,11 +226,11 @@ export function PartnersPage() {
               },
               {
                 title: 'Ongoing monitoring',
-                body: 'Use scheduled scans (Optimizer Pro) to catch new issues early and show continuous improvement in monthly reports.',
+                body: 'Re‑scan after changes to catch new issues early and show continuous improvement.',
               },
               {
-                title: 'White‑label client reporting',
-                body: 'On Optimizer Pro, generate branded PDFs that look like they came directly from your agency.',
+                title: 'Structured-data review',
+                body: 'On Optimizer Pro, use the Schema.org structured-data deep-dive as part of your technical audit.',
               },
             ].map(({ title, body }) => (
               <div key={title} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">

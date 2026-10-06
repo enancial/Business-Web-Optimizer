@@ -711,8 +711,8 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   const label = plan === 'optimizer' ? 'Optimizer' : 'Optimizer Pro';
                   const price = plan === 'optimizer' ? '$29/mo' : '$79/mo';
                   const desc = plan === 'optimizer'
-                    ? 'Full scan, deeper checks, PDF report, monthly re-scan.'
-                    : 'Everything in Optimizer + competitor comparison, white-label reports, API access.';
+                    ? 'Full scan, deeper checks, complete issue list by email.'
+                    : 'Everything in Optimizer + Schema.org structured-data deep-dive, priority support.';
                   return (
                     <div
                       key={plan}

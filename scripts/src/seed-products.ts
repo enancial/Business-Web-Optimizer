@@ -88,7 +88,7 @@ console.log("Seeding Stripe products for businessweboptimizer.com…\n");
 const optimizerProduct = await findOrCreateProduct(stripe, {
   name: "Optimizer",
   description:
-    "Full site scan, deeper checks, exportable PDF report, monthly re-scan.",
+    "Full site scan, deeper checks, complete prioritized issue list by email.",
   metadataValue: "optimizer",
 });
 
@@ -103,7 +103,7 @@ const optimizerPrice = await findOrCreatePrice(stripe, {
 const optimizerProProduct = await findOrCreateProduct(stripe, {
   name: "Optimizer Pro",
   description:
-    "Everything in Optimizer, plus scheduled scans, competitor comparison, white-label reports, and API access.",
+    "Everything in Optimizer, plus a Schema.org structured-data deep-dive and priority support.",
   metadataValue: "optimizer-pro",
 });
 

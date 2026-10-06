@@ -673,10 +673,10 @@ export function OptimizerTool() {
 
               {/* Upgrade CTA */}
               <div className="bwg-on-navy bg-[var(--bwg-navy)] rounded-2xl p-8 text-white text-center">
-                <h3 className="text-xl font-bold mb-2">Want monthly re-scans + the full report?</h3>
+                <h3 className="text-xl font-bold mb-2">Want the full report?</h3>
                 <p className="text-blue-100 mb-6 text-sm">
-                  Upgrade to Optimizer for a complete site audit, exportable PDF, and monthly
-                  re-scans — so you can track progress over time.
+                  Upgrade to Optimizer for the complete prioritized issue list,
+                  delivered straight to your inbox.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button

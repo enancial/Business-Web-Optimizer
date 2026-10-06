@@ -13,7 +13,7 @@ const cards = [
   {
     title: 'Ready to go deeper?',
     description:
-      "Get a full-site scan, deeper checks, and an exportable PDF report. Choose Optimizer for monthly re-scans, or Optimizer Pro for scheduled scans, competitor comparisons, and API access.",
+      "Get a full-site scan, deeper checks, and the complete prioritized issue list by email with Optimizer. Optimizer Pro adds a Schema.org structured-data deep-dive and priority support.",
     cta: 'See Optimizer Plans',
     href: '#pricing',
     testId: 'card-paid-plan',

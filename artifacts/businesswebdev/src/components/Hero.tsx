@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react';
 const annotations = [
   { label: 'Scan time', value: 'Under 60 seconds', note: 'From pasting the URL' },
   { label: 'Output', value: 'Prioritized fixes', note: 'Not a raw data dump' },
-  { label: 'Report', value: 'Exportable PDF', note: 'On paid plans' },
+  { label: 'Report', value: 'Full report by email', note: 'On paid plans' },
 ];
 
 export function Hero() {
