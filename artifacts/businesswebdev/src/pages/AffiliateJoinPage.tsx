@@ -80,7 +80,7 @@ export function AffiliateJoinPage() {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b px-4 sm:px-6 py-4">
-          <a href="/" className="font-bold text-[#1A3A7A] text-lg">Business Web Optimizer</a>
+          <a href="/" className="font-bold text-primary text-lg">Business Web Optimizer</a>
         </header>
 
         <div className="max-w-2xl mx-auto px-4 py-12">
@@ -155,7 +155,7 @@ export function AffiliateJoinPage() {
 
           {/* Dashboard link */}
           <div className="text-center">
-            <Button asChild className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white">
+            <Button asChild className="bg-[var(--bwg-navy)] hover:bg-primary text-white">
               <a href="/affiliates/dashboard">View your dashboard →</a>
             </Button>
           </div>
@@ -167,13 +167,13 @@ export function AffiliateJoinPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b px-4 sm:px-6 py-4">
-        <a href="/" className="font-bold text-[#1A3A7A] text-lg">Business Web Optimizer</a>
+        <a href="/" className="font-bold text-primary text-lg">Business Web Optimizer</a>
       </header>
 
       <div className="max-w-lg mx-auto px-4 py-12">
         {/* Hero */}
         <div className="mb-8 text-center">
-          <div className="inline-block bg-[#1A3A7A]/10 text-[#1A3A7A] text-xs font-semibold px-3 py-1 rounded-full mb-3">
+          <div className="inline-block bg-[var(--bwg-tint)] text-primary text-xs font-semibold px-3 py-1 rounded-full mb-3">
             Affiliate Program
           </div>
           <h1 className="text-3xl font-bold mb-3">Earn 30% recurring commission</h1>
@@ -191,7 +191,7 @@ export function AffiliateJoinPage() {
             { label: 'Payout', value: 'Monthly' },
           ].map(({ label, value }) => (
             <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-[#1A3A7A]">{value}</p>
+              <p className="text-2xl font-bold text-primary">{value}</p>
               <p className="text-xs text-muted-foreground mt-1">{label}</p>
             </div>
           ))}
@@ -270,14 +270,14 @@ export function AffiliateJoinPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+            className="w-full bg-[var(--bwg-navy)] hover:bg-primary text-white"
           >
             {loading ? 'Joining…' : 'Join the affiliate program →'}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
             Already an affiliate?{' '}
-            <a href="/affiliates/dashboard" className="text-[#1565D6] hover:underline">
+            <a href="/affiliates/dashboard" className="text-primary hover:underline">
               Log in to your dashboard
             </a>
           </p>

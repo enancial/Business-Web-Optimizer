@@ -1,0 +1,440 @@
+/*
+  BWG house style — portable brand layer.
+
+  Ported from the Business Web Group design system
+  (business-web-group: css/bwg-design-system.css + docs/bwg-design-system.md,
+  owner-approved mark 2026-09-27, Lighthouse a11y/BP/SEO 100, CLS 0.0017).
+
+  This file exists so the Replit-scaffolded sites (Business Web Dev,
+  Business Web AI, Business Web Optimizer) share the same visual language as
+  businesswebgroup.com and businesswebconsulting.com instead of each shipping
+  the generic centred-hero template.
+
+  It does two jobs:
+    1. Declares the --bwg-* tokens and the metric-matched font fallbacks.
+    2. Remaps the shadcn/Tailwind HSL tokens onto those values, so every
+       existing component inherits the brand without being rewritten.
+
+  Principles carried over from the source system:
+    - One accent. Royal blue carries every action, link and highlight.
+      (The scaffold's orange accent is retired here; it was never in the system.)
+    - Tokens, not literals.
+    - Restraint over decoration. Borders and a light tint do the work.
+    - Accessible by construction. 3px visible focus, 44px targets,
+      prefers-reduced-motion respected.
+*/
+
+/* ---------- Metric-matched fallbacks ----------
+   Shown until Manrope loads so the swap doesn't reflow headings.
+   size-adjust values are the measured Manrope/Arial advance ratios.
+   Arial at weight 800 resolves to Arial Black in Chrome, so the bold faces
+   must name "Arial Bold" explicitly. */
+@font-face {
+  font-family: "Manrope Fallback";
+  src: local("Arial"), local("ArialMT");
+  font-weight: 100 549;
+  size-adjust: 104.5%;
+  ascent-override: 102%;
+  descent-override: 28.7%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Manrope Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Arial");
+  font-weight: 550 749;
+  size-adjust: 100.3%;
+  ascent-override: 106.3%;
+  descent-override: 29.9%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Manrope Fallback";
+  src: local("Arial Bold"), local("Arial-BoldMT"), local("Arial");
+  font-weight: 750 1000;
+  size-adjust: 104.2%;
+  ascent-override: 102.3%;
+  descent-override: 28.8%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "DM Mono Fallback";
+  src: local("Consolas");
+  size-adjust: 109.1%;
+  ascent-override: 90.7%;
+  descent-override: 28.4%;
+  line-gap-override: 0%;
+}
+
+/* ---------- Tokens ---------- */
+:root {
+  /* Brand */
+  --bwg-blue: #2456e8;
+  --bwg-blue-strong: #1948d5;
+  --bwg-navy: #0b1b40;
+  --bwg-blue-on-navy: #8fb3ff;
+  --bwg-signal: #48c8f6; /* decorative only; never text, focus or meaningful borders */
+
+  /* Neutrals */
+  --bwg-ink: #10204a;
+  --bwg-muted: #53607b;
+  --bwg-paper: #fbfcff;
+  --bwg-mist: #f2f5fb;
+  --bwg-surface: #ffffff;
+  --bwg-tint: #edf2ff;
+  --bwg-line: #dbe3f1;
+  --bwg-line-strong: #c3d1ec;
+
+  /* Type */
+  --bwg-font: Manrope, "Manrope Fallback", Arial, sans-serif;
+  --bwg-font-mono: "DM Mono", "DM Mono Fallback", ui-monospace, Consolas, monospace;
+  --bwg-text-xs: 0.75rem;
+  --bwg-text-sm: 0.875rem;
+  --bwg-text-card: 0.9375rem;
+  --bwg-text-md: 1rem;
+  --bwg-text-lg: 1.125rem;
+  --bwg-h3: 1.1875rem;
+  --bwg-h2: clamp(1.875rem, 3.6vw, 2.875rem);
+  --bwg-h1: clamp(2.5rem, 5.2vw, 4.25rem);
+  --bwg-track-display: -0.035em;
+  --bwg-track-heading: -0.025em;
+
+  /* Space */
+  --bwg-space-1: 4px;
+  --bwg-space-2: 8px;
+  --bwg-space-3: 12px;
+  --bwg-space-4: 16px;
+  --bwg-space-5: 24px;
+  --bwg-space-6: 32px;
+  --bwg-space-7: 48px;
+  --bwg-space-8: 64px;
+  --bwg-section: clamp(72px, 9vw, 112px);
+
+  /* Shape */
+  --bwg-radius-sm: 8px;
+  --bwg-radius-md: 12px;
+  --bwg-radius-lg: 16px;
+  --bwg-shadow-1: 0 1px 2px rgba(16, 32, 74, 0.05), 0 6px 18px rgba(16, 32, 74, 0.05);
+  --bwg-shadow-2: 0 2px 4px rgba(16, 32, 74, 0.06), 0 14px 30px rgba(16, 32, 74, 0.09);
+  --bwg-shadow-button: 0 6px 16px rgba(36, 86, 232, 0.22);
+
+  /* Motion */
+  --bwg-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --bwg-dur: 180ms;
+
+  /* Layout */
+  --bwg-wrap: 1160px;
+  --bwg-gutter: 24px;
+  --bwg-target: 44px;
+}
+
+/* ---------- Scaffold remap ----------
+   The Replit scaffold drives every shadcn component from these HSL triples.
+   Rebinding them here is what makes the migration a restyle rather than a
+   rewrite. Values are the --bwg-* hexes above converted to HSL.
+
+   The doubled :root:root raises specificity so this block wins over the
+   scaffold's own :root regardless of where the bundler places this import. */
+:root:root {
+  --background: 225 100% 99%;    /* paper  #fbfcff */
+  --foreground: 223 64% 18%;     /* ink    #10204a */
+  --border: 218 44% 90%;         /* line   #dbe3f1 */
+  --input: 218 44% 90%;
+  --ring: 225 79% 47%;           /* blue-strong — 3:1+ focus ring */
+
+  --card: 0 0% 100%;
+  --card-foreground: 223 64% 18%;
+  --card-border: 218 44% 90%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 223 64% 18%;
+  --popover-border: 218 44% 90%;
+
+  --primary: 225 81% 53%;        /* blue   #2456e8 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 53% 97%;      /* mist   #f2f5fb */
+  --secondary-foreground: 223 64% 18%;
+
+  --muted: 220 53% 97%;
+  --muted-foreground: 221 19% 40%; /* muted #53607b — 6.15:1 on paper */
+
+  /* One accent: the accent surface is a quiet blue tint.
+     The scaffold's orange (20 90% 55%) is deliberately retired. */
+  --accent: 223 100% 96%;        /* tint #edf2ff */
+  --accent-foreground: 225 79% 47%;
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 223 64% 18%;
+  --sidebar-border: 218 44% 90%;
+  --sidebar-primary: 225 81% 53%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 223 100% 96%;
+  --sidebar-accent-foreground: 225 79% 47%;
+  --sidebar-ring: 225 79% 47%;
+
+  --chart-1: 225 81% 53%;
+  --chart-2: 225 79% 47%;
+  --chart-3: 220 53% 97%;
+  --chart-4: 221 19% 40%;
+  --chart-5: 222 71% 15%;
+
+  --app-font-sans: var(--bwg-font);
+  --app-font-mono: var(--bwg-font-mono);
+  --radius: 0.75rem; /* 12px — matches --bwg-radius-md */
+}
+
+/* ---------- Base ---------- */
+body {
+  font-family: var(--bwg-font);
+  color: var(--bwg-ink);
+  background: var(--bwg-paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  color: var(--bwg-ink);
+  font-weight: 800;
+  letter-spacing: var(--bwg-track-heading);
+}
+
+/* Visible focus on everything interactive, per the source system. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--bwg-blue-strong);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- House components ---------- */
+
+/* Eyebrow: mono, uppercase, blue-strong, with a 24px leading rule.
+   This is the single most identifying mark of the house style. */
+.bwg-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--bwg-blue-strong);
+  font-family: var(--bwg-font-mono);
+  font-size: var(--bwg-text-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.bwg-eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: currentColor;
+  flex: none;
+}
+
+/* One wrap for every content column. The scaffold's assorted
+   max-w-4xl/5xl/6xl/7xl containers produce a ragged left edge once
+   headings are left-aligned; this gives every section the same rail. */
+.bwg-wrap {
+  width: 100%;
+  max-width: var(--bwg-wrap);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 32px);
+}
+
+/* A narrower reading/entry column that still starts on the wrap's left rail. */
+.bwg-col {
+  max-width: 46rem;
+}
+
+/* Hero: left-aligned, asymmetric split. Replaces the centred
+   pill-badge-over-gradient-slab pattern. */
+.bwg-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(56px, 8vw, 96px) 0 clamp(56px, 7vw, 80px);
+  background: linear-gradient(180deg, var(--bwg-paper), #f1f5ff);
+  border-bottom: 1px solid var(--bwg-line);
+}
+.bwg-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: var(--bwg-space-8);
+  align-items: center;
+}
+.bwg-hero h1 {
+  font-size: var(--bwg-h1);
+  line-height: 1.04;
+  letter-spacing: var(--bwg-track-display);
+  max-width: 700px;
+  margin: var(--bwg-space-4) 0 var(--bwg-space-5);
+  text-wrap: balance;
+}
+.bwg-hero h1 em {
+  font-style: normal;
+  color: var(--bwg-blue);
+}
+.bwg-hero p {
+  max-width: 560px;
+  margin: 0 0 var(--bwg-space-4);
+  color: var(--bwg-muted);
+  font-size: var(--bwg-text-lg);
+  line-height: 1.7;
+}
+
+/* Section heading block: left-aligned h2 with the eyebrow above it. */
+.bwg-section {
+  padding: var(--bwg-section) 0;
+}
+.bwg-tint {
+  background: var(--bwg-mist);
+}
+.bwg-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--bwg-space-6);
+  margin-bottom: var(--bwg-space-7);
+}
+.bwg-head h2 {
+  font-size: var(--bwg-h2);
+  line-height: 1.1;
+  letter-spacing: var(--bwg-track-display);
+  margin: var(--bwg-space-4) 0 0;
+  max-width: 660px;
+}
+
+/* Annotation card: the small floating label used against the hero graphic. */
+.bwg-annotation {
+  background: var(--bwg-surface);
+  border-radius: var(--bwg-radius-md);
+  box-shadow: var(--bwg-shadow-2);
+  padding: var(--bwg-space-4) var(--bwg-space-5);
+}
+.bwg-annotation-label {
+  color: var(--bwg-muted);
+  font-family: var(--bwg-font-mono);
+  font-size: var(--bwg-text-xs);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.bwg-annotation-value {
+  color: var(--bwg-ink);
+  font-size: var(--bwg-text-card);
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+/* Numbered rows: used where content is sequential and a card grid would be
+   the wrong shape (the Enancial 01-04 pattern). */
+.bwg-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bwg-space-3);
+}
+.bwg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--bwg-space-5);
+  padding: var(--bwg-space-4) var(--bwg-space-5);
+  background: var(--bwg-surface);
+  border: 1px solid var(--bwg-line);
+  border-radius: var(--bwg-radius-md);
+  transition: border-color var(--bwg-dur) var(--bwg-ease),
+    box-shadow var(--bwg-dur) var(--bwg-ease);
+}
+.bwg-row:hover {
+  border-color: var(--bwg-line-strong);
+  box-shadow: var(--bwg-shadow-1);
+}
+.bwg-row-no {
+  color: var(--bwg-blue-strong);
+  font-family: var(--bwg-font-mono);
+  font-size: var(--bwg-text-sm);
+  font-weight: 500;
+}
+
+/* Icon tile on cards: tint ground, blue glyph. */
+.bwg-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--bwg-radius-sm);
+  background: var(--bwg-tint);
+  color: var(--bwg-blue);
+  flex: none;
+}
+
+/* Navy panel: for diagrams and dark inset blocks. Signal cyan is permitted
+   here only as a decorative node, never as text. */
+.bwg-panel-navy {
+  background: var(--bwg-navy);
+  color: #fff;
+  border-radius: var(--bwg-radius-lg);
+}
+/* .bwg-hero p sets a muted ink that is correct on paper and fails badly on
+   navy (#53607b on #0b1b40 is ~2.3:1). These two rules win on specificity
+   and source order, so panel copy stays legible. */
+.bwg-panel-navy p {
+  color: #fff;
+  max-width: none;
+}
+.bwg-panel-navy .bwg-panel-sub {
+  color: var(--bwg-blue-on-navy);
+}
+.bwg-panel-sub {
+  color: var(--bwg-blue-on-navy);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 980px) {
+  .bwg-hero-grid {
+    grid-template-columns: 1fr;
+    gap: var(--bwg-space-7);
+  }
+  .bwg-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--bwg-space-4);
+  }
+}
+@media (max-width: 760px) {
+  .bwg-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--bwg-space-2);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Dark-ground scope. The base `h1, h2, h3 { color: var(--bwg-ink) }` rule is
+   unlayered CSS, so in Tailwind v4 it beats the layered `text-white` utility
+   and renders headings near-invisibly on navy. Put this class on any container
+   sitting on a navy or ink ground. */
+.bwg-on-navy h1,
+.bwg-on-navy h2,
+.bwg-on-navy h3 {
+  color: #fff;
+}
+.bwg-on-navy p {
+  color: rgba(255, 255, 255, 0.72);
+}
+.bwg-on-navy .bwg-eyebrow {
+  color: var(--bwg-blue-on-navy);
+}

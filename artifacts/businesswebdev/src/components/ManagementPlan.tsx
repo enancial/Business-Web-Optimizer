@@ -23,7 +23,7 @@ interface ManagementPlanProps {
 export function ManagementPlan({ onCheckout }: ManagementPlanProps) {
   return (
     <section id="management-plan" className="py-20 bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bwg-wrap">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -31,7 +31,7 @@ export function ManagementPlan({ onCheckout }: ManagementPlanProps) {
           transition={{ duration: 0.5 }}
         >
           <h2
-            className="text-3xl sm:text-4xl font-bold mb-4"
+            className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4"
             data-testid="text-management-plan-headline"
           >
             Website Management Plan
@@ -42,7 +42,7 @@ export function ManagementPlan({ onCheckout }: ManagementPlanProps) {
           </p>
 
           <div className="flex flex-wrap gap-4 mb-8">
-            <div className="bg-accent text-accent-foreground px-6 py-3 rounded-lg font-bold text-xl">
+            <div className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-bold text-xl">
               $450/month
             </div>
             <div className="bg-card border border-border px-6 py-3 rounded-lg font-medium text-muted-foreground">
@@ -83,7 +83,7 @@ export function ManagementPlan({ onCheckout }: ManagementPlanProps) {
           <Button
             size="lg"
             onClick={onCheckout}
-            className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground text-base px-10"
+            className="w-full sm:w-auto  text-base px-10"
             data-testid="button-start-management-plan"
           >
             Start your Website Management Plan – $450/month

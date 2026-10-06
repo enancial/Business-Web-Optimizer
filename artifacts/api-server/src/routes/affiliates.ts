@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 import { eq, and, sql } from 'drizzle-orm';
 import { db, affiliates, affiliateConversions, affiliateEarnings } from '@workspace/db';
 import { sendViaSmtp2go } from '../lib/smtp2go';
+import { notifyOwnerEvent } from '../lib/ownerNotice';
 
 const router = Router();
 
@@ -180,6 +181,25 @@ router.post('/affiliates/join', async (req, res): Promise<void> => {
   req.log.info(
     { affiliateId: affiliate.id, code: affiliate.code },
     'New affiliate registered',
+  );
+
+  // Owner notice (funnel audit 2026-09-29): nobody was told an affiliate joined.
+  // Never throws; the D1 row above is the record.
+  await notifyOwnerEvent(
+    `new affiliate ${affiliate.code}`,
+    [
+      'Someone joined the Business Web Optimizer affiliate program. The account is active immediately.',
+      '',
+      `Name:      ${affiliate.name}`,
+      `Email:     ${affiliate.email}`,
+      `Code:      ${affiliate.code}`,
+      `Website:   ${affiliate.website ?? 'not given'}`,
+      `Promotion: ${affiliate.promotionMethod ?? 'not given'}`,
+      `PayPal:    ${affiliate.paypalEmail ? 'given' : 'not given'}`,
+      '',
+      'Review or deactivate in the admin affiliates page.',
+    ],
+    req.log,
   );
 
   res.json({

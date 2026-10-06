@@ -102,7 +102,7 @@ const STATUS_STYLES: Record<string, string> = {
   active: 'bg-green-100 text-green-800 border-green-200',
   trialing: 'bg-blue-100 text-blue-800 border-blue-200',
   past_due: 'bg-red-100 text-red-800 border-red-200',
-  canceled: 'bg-gray-100 text-gray-600 border-gray-200',
+  canceled: 'bg-gray-100 text-muted-foreground border-gray-200',
   incomplete: 'bg-amber-100 text-amber-800 border-amber-200',
   unpaid: 'bg-red-100 text-red-800 border-red-200',
 };
@@ -223,11 +223,11 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-20">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1A3A7A]/10 mb-4">
-            <Zap className="h-7 w-7 text-[#1A3A7A]" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--bwg-tint)] mb-4">
+            <Zap className="h-7 w-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Sign in to your account</h1>
-          <p className="text-gray-500 mt-2 text-sm">Enter the email you used at checkout.</p>
+          <h1 className="text-2xl font-bold text-foreground">Sign in to your account</h1>
+          <p className="text-muted-foreground mt-2 text-sm">Enter the email you used at checkout.</p>
         </div>
 
         <form
@@ -235,7 +235,7 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
           className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm"
         >
           <div className="mb-4">
-            <label htmlFor="auth-email" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="auth-email" className="block text-sm font-medium text-foreground mb-1.5">
               Email address
             </label>
             <Input
@@ -255,19 +255,19 @@ function AuthGate({ onSuccess }: { onSuccess: (token: string) => void }) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#1A3A7A] hover:bg-[#1565D6] text-white h-11"
+            className="w-full bg-[var(--bwg-navy)] hover:bg-primary text-white h-11"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Access my account →'}
           </Button>
 
-          <p className="text-xs text-gray-400 text-center mt-4">
+          <p className="text-xs text-muted-foreground text-center mt-4">
             Enter the email you used to start your free trial or subscription.
           </p>
         </form>
 
-        <p className="text-center mt-6 text-sm text-gray-500">
+        <p className="text-center mt-6 text-sm text-muted-foreground">
           Questions?{' '}
-          <a href="mailto:contact@businessweboptimizer.com" className="text-[#1565D6] hover:underline">
+          <a href="mailto:contact@businessweboptimizer.com" className="text-primary hover:underline">
             contact@businessweboptimizer.com
           </a>
         </p>
@@ -352,7 +352,7 @@ function PaymentUpdateForm({
         </p>
       )}
       <div className="flex gap-3">
-        <Button type="submit" disabled={loading || !stripe} className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white">
+        <Button type="submit" disabled={loading || !stripe} className="bg-[var(--bwg-navy)] hover:bg-primary text-white">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save new card'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
@@ -477,7 +477,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-8 w-8 text-[#1565D6] animate-spin" />
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
@@ -486,7 +486,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
     return (
       <div className="max-w-lg mx-auto py-20 text-center">
         <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-        <p className="text-gray-700 mb-4">{(fetchError as Error).message}</p>
+        <p className="text-foreground mb-4">{(fetchError as Error).message}</p>
         <Button variant="outline" onClick={onSignOut}>Sign out</Button>
       </div>
     );
@@ -512,14 +512,14 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
       {/* Page header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-sm text-gray-500 mb-0.5">{customer.email}</p>
-          <h1 className="text-2xl font-bold text-gray-900">Your Account</h1>
+          <p className="text-sm text-muted-foreground mb-0.5">{customer.email}</p>
+          <h1 className="text-2xl font-bold text-foreground">Your Account</h1>
         </div>
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-500 hover:text-gray-700 gap-1.5"
+            className="text-muted-foreground hover:text-foreground gap-1.5"
             onClick={() => navigate('/')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -528,7 +528,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-gray-600"
+            className="gap-1.5 text-muted-foreground"
             onClick={onSignOut}
           >
             <LogOut className="h-4 w-4" />
@@ -542,10 +542,10 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Current plan</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Current plan</p>
               {subscription ? (
                 <>
-                  <h2 className="text-xl font-bold text-gray-900">{subscription.planLabel}</h2>
+                  <h2 className="text-xl font-bold text-foreground">{subscription.planLabel}</h2>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
                       className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_STYLES[subscription.status] ?? STATUS_STYLES['active']}`}
@@ -562,15 +562,15 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   </div>
                 </>
               ) : (
-                <h2 className="text-xl font-bold text-gray-900">Free Trial</h2>
+                <h2 className="text-xl font-bold text-foreground">Free Trial</h2>
               )}
             </div>
             {subscription && (
               <div className="text-right shrink-0">
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-foreground">
                   {fmt(subscription.amount, subscription.currency)}
                 </p>
-                <p className="text-sm text-gray-400">per month</p>
+                <p className="text-sm text-muted-foreground">per month</p>
               </div>
             )}
           </div>
@@ -595,8 +595,8 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   })()}
                 </>
               ) : (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                   {subscription.cancelAtPeriodEnd
                     ? `Access ends ${fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}`
                     : `Next billing date: ${fmtDate(subscription.currentPeriodEnd)}`}
@@ -610,20 +610,20 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Scan access</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Scan access</p>
               {tokenExpTs ? (
                 <>
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-foreground">
                     {tokenExpTs * 1000 > Date.now()
                       ? `Valid until ${fmtDate(tokenExpTs)}`
                       : 'Access expired'}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Tokens refresh every 30 days for paid subscribers.
                   </p>
                 </>
               ) : (
-                <p className="font-semibold text-gray-900">No scan token stored</p>
+                <p className="font-semibold text-foreground">No scan token stored</p>
               )}
             </div>
             <div className="shrink-0">
@@ -650,18 +650,18 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Payment method</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Payment method</p>
               {paymentMethod ? (
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-gray-400" />
-                  <span className="font-medium text-gray-900 capitalize">{paymentMethod.brand}</span>
-                  <span className="text-gray-500">···· {paymentMethod.last4}</span>
-                  <span className="text-xs text-gray-400">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground capitalize">{paymentMethod.brand}</span>
+                  <span className="text-muted-foreground">···· {paymentMethod.last4}</span>
+                  <span className="text-xs text-muted-foreground">
                     {paymentMethod.expMonth}/{String(paymentMethod.expYear).slice(-2)}
                   </span>
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">No payment method on file.</p>
+                <p className="text-muted-foreground text-sm">No payment method on file.</p>
               )}
             </div>
             {!setupIntent && (
@@ -700,8 +700,8 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
               className="flex items-center justify-between w-full text-left"
               onClick={() => setShowPlanChange(!showPlanChange)}
             >
-              <p className="font-semibold text-gray-900">Change plan</p>
-              {showPlanChange ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              <p className="font-semibold text-foreground">Change plan</p>
+              {showPlanChange ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </button>
 
             {showPlanChange && (
@@ -716,21 +716,21 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   return (
                     <div
                       key={plan}
-                      className={`border rounded-xl p-4 ${isCurrent ? 'border-[#1565D6] bg-blue-50' : 'border-gray-200'}`}
+                      className={`border rounded-xl p-4 ${isCurrent ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-gray-900">{label}</span>
-                        {isCurrent && <span className="text-xs font-medium text-[#1565D6] bg-blue-100 px-2 py-0.5 rounded-full">Current</span>}
+                        <span className="font-semibold text-foreground">{label}</span>
+                        {isCurrent && <span className="text-xs font-medium text-primary bg-blue-100 px-2 py-0.5 rounded-full">Current</span>}
                       </div>
-                      <p className="text-sm text-gray-500 mb-3">{desc}</p>
+                      <p className="text-sm text-muted-foreground mb-3">{desc}</p>
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-gray-900">{price}</span>
+                        <span className="font-bold text-foreground">{price}</span>
                         {!isCurrent && (
                           <Button
                             size="sm"
                             onClick={() => changePlanMutation.mutate(plan)}
                             disabled={changePlanMutation.isPending}
-                            className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+                            className="bg-[var(--bwg-navy)] hover:bg-primary text-white"
                           >
                             {changePlanMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Switch'}
                           </Button>
@@ -757,18 +757,18 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
               className="flex items-center justify-between w-full text-left mb-2"
               onClick={() => setShowInvoices(!showInvoices)}
             >
-              <p className="font-semibold text-gray-900 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-400" />
+              <p className="font-semibold text-foreground flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
                 Invoices ({invoices.length})
               </p>
-              {showInvoices ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
+              {showInvoices ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
             </button>
 
             {showInvoices && (
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+                    <tr className="text-xs text-muted-foreground uppercase tracking-wide border-b border-gray-100">
                       <th className="pb-2 text-left font-medium">Date</th>
                       <th className="pb-2 text-left font-medium">Invoice</th>
                       <th className="pb-2 text-left font-medium">Amount</th>
@@ -778,12 +778,12 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {invoices.map((inv) => (
-                      <tr key={inv.id} className="text-gray-700">
+                      <tr key={inv.id} className="text-foreground">
                         <td className="py-2.5">{fmtDateShort(inv.date)}</td>
-                        <td className="py-2.5 font-mono text-xs text-gray-500">{inv.number ?? inv.id.slice(-8)}</td>
+                        <td className="py-2.5 font-mono text-xs text-muted-foreground">{inv.number ?? inv.id.slice(-8)}</td>
                         <td className="py-2.5 font-medium">{fmt(inv.amount, inv.currency)}</td>
                         <td className="py-2.5">
-                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${inv.status === 'paid' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${inv.status === 'paid' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-muted-foreground border-gray-200'}`}>
                             {inv.status}
                           </span>
                         </td>
@@ -793,7 +793,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                               href={inv.pdfUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[#1565D6] hover:underline text-xs"
+                              className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
                             >
                               PDF <ExternalLink className="h-3 w-3" />
                             </a>
@@ -802,7 +802,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                               href={inv.hostedUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[#1565D6] hover:underline text-xs"
+                              className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
                             >
                               View <ExternalLink className="h-3 w-3" />
                             </a>
@@ -826,8 +826,8 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
               /* ── Trial cancel section ─────────────────────────────────── */
               subscription.cancelAtPeriodEnd ? (
                 <>
-                  <p className="font-semibold text-gray-900 mb-1">Keep your trial</p>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="font-semibold text-foreground mb-1">Keep your trial</p>
+                  <p className="text-sm text-muted-foreground mb-4">
                     Your trial is set to end early on{' '}
                     {fmtDate(subscription.trialEnd ?? subscription.cancelAt ?? subscription.currentPeriodEnd)}.
                     You won't be charged. Resume to keep access and be billed at the end of your trial.
@@ -842,7 +842,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                 </>
               ) : cancelConfirm ? (
                 <>
-                  <p className="font-semibold text-gray-900 mb-1">Cancel your free trial?</p>
+                  <p className="font-semibold text-foreground mb-1">Cancel your free trial?</p>
                   <div className="flex items-start gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4">
                     <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-blue-500" />
                     <span>
@@ -868,8 +868,8 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                 </>
               ) : (
                 <>
-                  <p className="font-semibold text-gray-900 mb-1">Cancel trial</p>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="font-semibold text-foreground mb-1">Cancel trial</p>
+                  <p className="text-sm text-muted-foreground mb-4">
                     Cancel before {fmtDate(subscription.trialEnd ?? subscription.currentPeriodEnd)} and you won't be charged a thing.
                     You keep full access until your trial ends.
                   </p>
@@ -887,12 +887,12 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
             ) : (
               /* ── Regular subscription cancel section ──────────────────── */
               <>
-                <p className="font-semibold text-gray-900 mb-1">
+                <p className="font-semibold text-foreground mb-1">
                   {subscription.cancelAtPeriodEnd ? 'Keep your subscription' : 'Cancel subscription'}
                 </p>
                 {subscription.cancelAtPeriodEnd ? (
                   <>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Your subscription is scheduled to cancel on {fmtDate(subscription.cancelAt ?? subscription.currentPeriodEnd)}. You can keep access by resuming now.
                     </p>
                     <Button
@@ -926,7 +926,7 @@ function Dashboard({ token, onSignOut }: { token: string; onSignOut: () => void 
                   </>
                 ) : (
                   <>
-                    <p className="text-sm text-gray-500 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                       Cancels at end of current billing period. You keep access until then.
                     </p>
                     <Button
@@ -961,7 +961,7 @@ export function AccountPage() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-[#1565D6] animate-spin" />
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }

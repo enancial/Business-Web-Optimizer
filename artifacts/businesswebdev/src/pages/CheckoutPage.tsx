@@ -231,7 +231,7 @@ function OrderStep({ product, onContinue, onBack }: OrderStepProps) {
         <Button
           type="button"
           onClick={() => onContinue(promoResult)}
-          className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base"
+          className="flex-1  text-base"
         >
           {displayAmount === 0
             ? 'Claim free access'
@@ -366,7 +366,7 @@ function PaymentForm({ product, intentResult, onBack }: PaymentFormProps) {
         <Button
           type="submit"
           disabled={!stripe || isProcessing}
-          className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-base"
+          className="flex-1  text-base"
         >
           {isProcessing
             ? 'Starting trial…'
@@ -491,7 +491,7 @@ export function CheckoutPage() {
             </p>
             <Button
               asChild
-              className="bg-[#1A3A7A] hover:bg-[#1565D6] text-white"
+              className="bg-[var(--bwg-navy)] hover:bg-primary text-white"
               data-testid="button-already-subscribed-account"
             >
               <a href="/account">Manage it here →</a>
@@ -586,7 +586,7 @@ export function CheckoutPage() {
               </div>
               <Button
                 onClick={goBack}
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                className="w-full "
               >
                 Back to site
               </Button>

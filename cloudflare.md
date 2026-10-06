@@ -68,7 +68,7 @@ Plain variable in `wrangler.jsonc`: `LEAD_NOTIFY_EMAIL` (`enancial@gmail.com`) r
 
 ## Report leads
 
-`POST /api/send-report` stores the request in D1 `report_leads` **before** sending anything, so a failed send still leaves the lead on record. It then emails the report, records `report_status` (`sent` / `failed`), `report_email_id` and `report_error`, and sends an owner notice to `LEAD_NOTIFY_EMAIL`, setting `owner_notified`. If the row can't be stored, the error is logged and the report and owner notice still go out, so the notice is the fallback record. The visitor asked for a report, not a sales follow-up, so these rows are not a consent basis for outreach.
+`POST /api/send-report` stores the request in D1 `report_leads` **before** sending anything, so a failed send still leaves the lead on record. It then emails the report, records `report_status` (`sent` / `failed`), `report_email_id` and `report_error`, and sends an owner notice to `LEAD_NOTIFY_EMAIL`, setting `owner_notified`. If the row can't be stored, the error is logged and the report and owner notice still go out, so the notice is the fallback record. The success response says which happened: `{ sent: true, stored, leadId, ownerNotified }`. When storage **and** the owner notice both fail, the route logs `REPORT LEAD UNRECORDED` with the email, URL and score, because the logs are then the only record. The visitor asked for a report, not a sales follow-up, so these rows are not a consent basis for outreach.
 
 Read them:
 
@@ -88,6 +88,8 @@ Verified 2026-09-27 on `https://businessweboptimizer.com`:
 - `POST /api/validate-promo` with a real code returns `valid: true` and live price amounts.
 - `POST /api/stripe/webhook` with a forged signature returns 400 "No signatures found".
 - `POST /api/send-report` to `enancial@gmail.com` returns `{"sent":true}`. SMTP2GO logged the message as `delivered`, and it arrived in the Gmail inbox, not spam.
-- The same request (deploy `ce2c3f75`) stored a `report_leads` row with `report_status='sent'`, an `email_id`, and `owner_notified=1`; both the report and the owner notice were `delivered` and in the inbox. The test row was deleted afterwards (count 0).- `/robots.txt` on workers.dev returns `Disallow: /`.
+- The same request (deploy `ce2c3f75`) stored a `report_leads` row with `report_status='sent'`, an `email_id`, and `owner_notified=1`; both the report and the owner notice were `delivered` and in the inbox. The test row was deleted afterwards (count 0).
+- 2026-09-30, deploy `39397849`: the same request on the custom domain returned `{"sent":true,"stored":true,"leadId":6,"ownerNotified":true}`, and an independent read through the D1 gateway found row 6 before it was deleted. The custom domain is bound to Worker `business-web-optimizer-app` (production) and the zone has no other Workers routes. A retest within a minute of deploy still returned the old `{"sent":true}`; that was propagation, so retest before treating a stale response as a routing fault.
+- `/robots.txt` on workers.dev returns `Disallow: /`.
 - `/sitemap.xml` on workers.dev returns 404.
 - Remote D1 contains `affiliates`, `affiliate_conversions`, `affiliate_earnings`, and `report_leads` (migration `0001_narrow_living_mummy.sql`).

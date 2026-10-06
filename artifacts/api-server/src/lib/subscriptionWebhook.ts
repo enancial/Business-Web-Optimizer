@@ -8,6 +8,7 @@ import { getUncachableStripeClient } from '../stripeClient';
 import { db, affiliates, affiliateConversions, affiliateEarnings } from '@workspace/db';
 import { eq, and } from 'drizzle-orm';
 import { sendViaSmtp2go } from './smtp2go';
+import { notifyOwnerEvent } from './ownerNotice';
 
 // ---------------------------------------------------------------------------
 // Shared email helper (SMTP2Go)
@@ -80,8 +81,21 @@ export async function handleWebhookEvent(
     case 'customer.subscription.created':
       await onSubscriptionCreated(event.data.object as Stripe.Subscription, log);
       break;
+    case 'customer.subscription.updated':
+      await onSubscriptionUpdated(
+        event.data.object as Stripe.Subscription,
+        (event.data as { previous_attributes?: Record<string, unknown> }).previous_attributes ?? {},
+        log,
+      );
+      break;
     case 'customer.subscription.deleted':
       await onSubscriptionDeleted(event.data.object as Stripe.Subscription, log);
+      await notifySubscriptionEvent(
+        event.data.object as Stripe.Subscription,
+        'subscription ended',
+        'The subscription has ended (cancelled, or the trial ended without a successful charge).',
+        log,
+      );
       break;
     default:
       // All other events are intentionally ignored.
@@ -193,6 +207,11 @@ async function onPaymentIntentSucceeded(
       source_payment_intent: paymentIntent.id,
       ...(promotionCodeId ? { promotion_code_id: promotionCodeId } : {}),
     },
+  }, {
+    // Duplicate-subscription guard: a retried or concurrently delivered webhook
+    // for the same PaymentIntent cannot create a second subscription. The same
+    // key string is used in Business-Web-Optimizer and Business-Web-Dev.
+    idempotencyKey: 'create-sub-' + paymentIntent.id,
   });
 
   log.info(
@@ -489,5 +508,91 @@ async function onSubscriptionDeleted(
       { subscriptionId: subscription.id },
       'Affiliate conversion marked as canceled following subscription deletion',
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Owner notices (funnel audit 2026-09-29)
+// ---------------------------------------------------------------------------
+// Checkout creates a trialing subscription as soon as "Continue" is clicked,
+// before any card is entered, so `created` fires for abandoned checkouts too.
+// The meaningful moment is the card being saved (default_payment_method goes
+// from null to set), which arrives as customer.subscription.updated.
+
+/** True only for Business Web Optimizer subscriptions — the Stripe account is shared. */
+export function isOptimizerSubscription(subscription: Stripe.Subscription): boolean {
+  const product = subscription.metadata?.product;
+  if (product === 'optimizer' || product === 'optimizer-pro') return true;
+  const known = new Set(
+    [process.env.OPTIMIZER_PRICE_ID, process.env.OPTIMIZER_PRO_PRICE_ID].filter(Boolean) as string[],
+  );
+  return (subscription.items?.data ?? []).some((item) => known.has(item.price?.id));
+}
+
+async function onSubscriptionUpdated(
+  subscription: Stripe.Subscription,
+  previous: Record<string, unknown>,
+  log: Logger,
+): Promise<void> {
+  if ('default_payment_method' in previous && !previous.default_payment_method && subscription.default_payment_method) {
+    await notifySubscriptionEvent(
+      subscription,
+      subscription.status === 'trialing' ? 'trial started (card saved)' : 'payment method added',
+      'A card was saved on this subscription. For a trial, Stripe charges automatically when the trial ends.',
+      log,
+    );
+    return;
+  }
+  if ('cancel_at_period_end' in previous && previous.cancel_at_period_end !== subscription.cancel_at_period_end) {
+    await notifySubscriptionEvent(
+      subscription,
+      subscription.cancel_at_period_end ? 'cancellation scheduled' : 'cancellation reversed',
+      subscription.cancel_at_period_end
+        ? 'The customer scheduled cancellation at the end of the current period.'
+        : 'The customer reversed a scheduled cancellation.',
+      log,
+    );
+  }
+}
+
+export async function notifySubscriptionEvent(
+  subscription: Stripe.Subscription,
+  what: string,
+  explanation: string,
+  log: Logger,
+): Promise<void> {
+  try {
+    if (!isOptimizerSubscription(subscription)) return;
+    const customerId =
+      typeof subscription.customer === 'string'
+        ? subscription.customer
+        : (subscription.customer as { id?: string } | null)?.id ?? '';
+    let email: string | null = null;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const c = await stripe.customers.retrieve(customerId);
+      email = !c.deleted && 'email' in c ? c.email ?? null : null;
+    } catch (err) {
+      log.warn({ customerId, err: err instanceof Error ? err.message : String(err) }, 'Owner notice: customer lookup failed');
+    }
+    const fmt = (s?: number | null) => (s ? new Date(s * 1000).toISOString().slice(0, 10) : 'n/a');
+    const plan = subscription.metadata?.product === 'optimizer-pro' ? 'Optimizer Pro' : 'Optimizer';
+    await notifyOwnerEvent(
+      `${what} — ${plan}`,
+      [
+        explanation,
+        '',
+        `Plan:          ${plan}`,
+        `Status:        ${subscription.status}`,
+        `Trial ends:    ${fmt(subscription.trial_end)}`,
+        `Subscription:  ${subscription.id}`,
+        `Customer:      ${customerId}`,
+        `Customer email: ${email ?? 'NONE ON FILE — the customer cannot sign in at /account (lookup is by email) and will not get the trial-ending reminder'}`,
+        `Affiliate:     ${subscription.metadata?.affiliate_code ?? 'none'}`,
+      ],
+      log,
+    );
+  } catch (err) {
+    log.error({ err: err instanceof Error ? err.message : String(err) }, 'Owner notice for subscription event threw');
   }
 }
